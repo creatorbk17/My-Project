@@ -1,0 +1,2642 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BADALWORKS — AI Creative Specialist</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=Space+Mono:wght@400;700&family=Inter:wght@300;400;500&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --red: #CC2200;
+      --red2: #FF3A1A;
+      --red-glow: rgba(204, 34, 0, .35);
+      --bg: #060000;
+      --bg2: #0e0101;
+      --text: #F5F0EE;
+      --muted: rgba(245, 240, 238, .4);
+      --dim: rgba(245, 240, 238, .07);
+      --border: rgba(204, 34, 0, .25);
+    }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow-x: hidden;
+      cursor: none;
+    }
+
+    /* ══ CURSOR ══ */
+    #cur-wrap {
+      position: fixed;
+      z-index: 99999;
+      pointer-events: none;
+      top: 0;
+      left: 0;
+    }
+
+    #cur-default {
+      width: 44px;
+      height: 44px;
+      transform: translate(-50%, -50%);
+      filter: drop-shadow(0 0 8px var(--red));
+      transition: opacity .15s;
+    }
+
+    #cur-hover {
+      width: 40px;
+      height: 40px;
+      transform: translate(-50%, -50%);
+      opacity: 0;
+      transition: opacity .15s;
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+
+    body.on-link #cur-default {
+      opacity: 0;
+    }
+
+    body.on-link #cur-hover {
+      opacity: 1;
+    }
+
+    /* ══ CANVAS ══ */
+    #space-canvas {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+    }
+
+    /* ══ NAV ══ */
+    nav {
+      position: fixed;
+      top: 1.2rem;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 600;
+      width: calc(100% - 4rem);
+      max-width: 1100px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: .85rem 2rem;
+      background: rgba(6, 0, 0, .75);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid var(--border);
+      clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 14px 100%, 0 calc(100% - 14px));
+      box-shadow: 0 0 0 1px rgba(204, 34, 0, .1), 0 8px 40px rgba(0, 0, 0, .8);
+    }
+
+    .logo {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 1.1rem;
+      letter-spacing: .08em;
+      color: var(--text);
+      text-decoration: none;
+    }
+
+    .logo em {
+      font-style: normal;
+      color: var(--red2);
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 2.5rem;
+      list-style: none;
+    }
+
+    .nav-links a {
+      font-family: 'Space Mono', monospace;
+      font-size: .6rem;
+      color: var(--muted);
+      text-decoration: none;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      transition: color .2s;
+    }
+
+    .nav-links a:hover {
+      color: var(--red2);
+    }
+
+    .nav-pill {
+      font-family: 'Space Mono', monospace;
+      font-size: .58rem;
+      letter-spacing: .1em;
+      background: var(--red);
+      color: #fff;
+      border: 1px solid var(--red2);
+      padding: .42rem 1.1rem;
+      clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px));
+      text-decoration: none;
+      transition: background .2s;
+    }
+
+    .nav-pill:hover {
+      background: var(--red2);
+    }
+
+    /* ══════════════════════════════
+   HERO — 100vh with orbit
+══════════════════════════════ */
+    #hero {
+      position: relative;
+      z-index: 1;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      overflow: hidden;
+    }
+
+    #hero::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 220px;
+      background: linear-gradient(to top, rgba(204, 34, 0, .1), transparent);
+      pointer-events: none;
+      z-index: 6;
+    }
+
+    #orbit-scene {
+      position: absolute;
+      inset: 0;
+      z-index: 5;
+      perspective: 1200px;
+      pointer-events: none;
+      transition: transform 1s ease, opacity 1s ease;
+    }
+
+    /* when story is active, orbit shrinks to bg corner */
+    #orbit-scene.story-mode {
+      transform: scale(.35) translate(55%, 48%);
+      opacity: .25;
+    }
+
+    .orbit-ring {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform-style: preserve-3d;
+      animation: orbitSpin var(--dur, 24s) linear infinite;
+    }
+
+    @keyframes orbitSpin {
+      from {
+        transform: translate(-50%, -50%) rotateX(var(--tilt)) rotateY(0deg);
+      }
+
+      to {
+        transform: translate(-50%, -50%) rotateX(var(--tilt)) rotateY(360deg);
+      }
+    }
+
+    .orbit-card {
+      position: absolute;
+      transform-style: preserve-3d;
+      transform: translateX(-50%) translateY(-50%);
+    }
+
+    .o-inner {
+      background: rgba(20, 2, 2, .7);
+      border: 1px solid rgba(204, 34, 0, .3);
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 0 20px rgba(204, 34, 0, .2), 0 12px 30px rgba(0, 0, 0, .7), inset 0 1px 0 rgba(255, 100, 80, .15);
+      position: relative;
+    }
+
+    .o-inner::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255, 58, 26, .5), transparent);
+      z-index: 2;
+    }
+
+    .o-inner video {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .hero-center {
+      position: relative;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .hero-status {
+      display: inline-flex;
+      align-items: center;
+      gap: .5rem;
+      background: rgba(204, 34, 0, .12);
+      border: 1px solid var(--border);
+      clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px));
+      padding: .3rem 1rem;
+      font-family: 'Space Mono', monospace;
+      font-size: .58rem;
+      letter-spacing: .14em;
+      color: rgba(255, 100, 80, .8);
+      text-transform: uppercase;
+      margin-bottom: 2rem;
+      opacity: 0;
+      animation: fadeUp .8s .5s forwards;
+    }
+
+    .sdot {
+      width: 6px;
+      height: 6px;
+      background: var(--red2);
+      border-radius: 50%;
+      box-shadow: 0 0 8px var(--red2);
+      animation: blink 2s ease-in-out infinite;
+    }
+
+    @keyframes blink {
+
+      0%,
+      100% {
+        opacity: 1
+      }
+
+      50% {
+        opacity: .2
+      }
+    }
+
+    .hero-name {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: clamp(4rem, 10vw, 9.5rem);
+      line-height: .88;
+      letter-spacing: -.02em;
+      margin-bottom: 1rem;
+      opacity: 0;
+      animation: fadeUp .8s .65s forwards;
+    }
+
+    .hero-name .w {
+      color: var(--text);
+    }
+
+    .hero-name .r {
+      color: var(--red2);
+      text-shadow: 0 0 40px rgba(255, 58, 26, .5);
+    }
+
+    .hero-role {
+      font-family: 'Space Mono', monospace;
+      font-size: .68rem;
+      letter-spacing: .22em;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 2rem;
+      opacity: 0;
+      animation: fadeUp .8s .8s forwards;
+    }
+
+    .hero-sub {
+      font-size: .93rem;
+      color: var(--muted);
+      line-height: 1.85;
+      max-width: 460px;
+      font-weight: 300;
+      margin-bottom: 2.5rem;
+      opacity: 0;
+      animation: fadeUp .8s .95s forwards;
+    }
+
+    .hero-sub strong {
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    .hero-btns {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      opacity: 0;
+      animation: fadeUp .8s 1.1s forwards;
+    }
+
+    .btn-red {
+      background: var(--red);
+      color: #fff;
+      font-weight: 500;
+      font-size: .8rem;
+      padding: .82rem 2rem;
+      clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px));
+      text-decoration: none;
+      box-shadow: 0 0 30px var(--red-glow);
+      transition: background .2s, box-shadow .2s;
+    }
+
+    .btn-red:hover {
+      background: var(--red2);
+      box-shadow: 0 0 50px rgba(255, 58, 26, .5);
+    }
+
+    .btn-ghost {
+      color: var(--muted);
+      font-size: .8rem;
+      padding: .82rem 1.8rem;
+      border: 1px solid var(--border);
+      clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px));
+      text-decoration: none;
+      transition: border-color .2s, color .2s;
+    }
+
+    .btn-ghost:hover {
+      border-color: var(--red2);
+      color: var(--text);
+    }
+
+    .scroll-hint {
+      position: absolute;
+      bottom: 2.5rem;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: .5rem;
+      opacity: 0;
+      animation: fadeIn 1s 2s forwards;
+    }
+
+    .scroll-line {
+      width: 1px;
+      height: 44px;
+      background: linear-gradient(to bottom, var(--red), transparent);
+      animation: sp 2s ease-in-out infinite;
+    }
+
+    .scroll-text {
+      font-family: 'Space Mono', monospace;
+      font-size: .48rem;
+      letter-spacing: .2em;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+
+    @keyframes sp {
+
+      0%,
+      100% {
+        opacity: .3
+      }
+
+      50% {
+        opacity: 1
+      }
+    }
+
+    /* ══════════════════════════════
+   SCROLL STORY — sticky
+══════════════════════════════ */
+    #story-outer {
+      position: relative;
+      z-index: 1;
+      /* 5 screens for 8 slides — faster scroll pacing */
+      height: calc(100vh * 5);
+    }
+
+    #story-sticky {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* slides container */
+    #story-slides {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+    }
+
+    /* single slide */
+    .slide {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      align-items: center;
+      gap: 5rem;
+      padding: 0 6rem 0 5rem;
+      opacity: 0;
+      pointer-events: none;
+      will-change: transform, opacity;
+      /* enter from orbit (right side, small, 3D rotated) */
+      transform: perspective(1000px) translateX(120px) translateZ(-300px) rotateY(-25deg) scale(.55);
+      transition:
+        opacity .65s cubic-bezier(.4, 0, .2, 1),
+        transform .75s cubic-bezier(.34, 1.2, .64, 1);
+    }
+
+    .slide.active {
+      opacity: 1;
+      pointer-events: all;
+      transform: perspective(1000px) translateX(0) translateZ(0) rotateY(0deg) scale(1);
+    }
+
+    .slide.past {
+      opacity: 0;
+      pointer-events: none;
+      transform: perspective(1000px) translateX(-120px) translateZ(-300px) rotateY(25deg) scale(.55);
+      transition: opacity .5s ease, transform .6s ease;
+    }
+
+    /* video side */
+    .slide-video-wrap {
+      position: relative;
+      max-width: 320px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    .slide-video-frame {
+      position: relative;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 0 60px rgba(204, 34, 0, .25), 0 30px 80px rgba(0, 0, 0, .7);
+      aspect-ratio: 9/16;
+    }
+
+    .slide-video-frame::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--red2), transparent);
+      z-index: 3;
+    }
+
+    .slide-video-frame video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    /* glare effect on card */
+    .slide-video-frame::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255, 255, 255, .04) 0%, transparent 50%);
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    /* play button overlay */
+    .slide-play {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 4;
+      width: 56px;
+      height: 56px;
+      background: rgba(204, 34, 0, .85);
+      border: 1px solid var(--red2);
+      clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      pointer-events: all;
+      box-shadow: 0 0 30px var(--red-glow);
+      transition: background .2s, transform .2s;
+    }
+
+    .slide-play:hover {
+      background: var(--red2);
+      transform: translate(-50%, -50%) scale(1.1);
+    }
+
+    .slide-play svg {
+      width: 18px;
+      height: 18px;
+      fill: #fff;
+      margin-left: 3px;
+    }
+
+    /* description side */
+    .slide-desc {
+      display: flex;
+      flex-direction: column;
+      gap: 1.2rem;
+    }
+
+    .slide-count {
+      font-family: 'Space Mono', monospace;
+      font-size: .6rem;
+      letter-spacing: .2em;
+      color: rgba(204, 34, 0, .6);
+      text-transform: uppercase;
+    }
+
+    .slide-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: .4rem;
+      background: rgba(204, 34, 0, .1);
+      border: 1px solid var(--border);
+      clip-path: polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 6px 100%, 0 calc(100% - 6px));
+      padding: .3rem .8rem;
+      font-family: 'Space Mono', monospace;
+      font-size: .55rem;
+      letter-spacing: .12em;
+      color: var(--red2);
+      text-transform: uppercase;
+      width: fit-content;
+    }
+
+    .slide-title {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: clamp(1.8rem, 3.5vw, 3rem);
+      line-height: .95;
+      color: var(--text);
+    }
+
+    .slide-title em {
+      font-style: normal;
+      color: var(--red2);
+    }
+
+    .slide-body {
+      font-size: .88rem;
+      color: var(--muted);
+      line-height: 1.85;
+      font-weight: 300;
+      max-width: 380px;
+    }
+
+    .slide-body strong {
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    .slide-tools {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .4rem;
+      margin-top: .3rem;
+    }
+
+    .slide-tool {
+      font-family: 'Space Mono', monospace;
+      font-size: .52rem;
+      letter-spacing: .08em;
+      color: var(--muted);
+      border: 1px solid rgba(204, 34, 0, .2);
+      padding: .2rem .6rem;
+      clip-path: polygon(0 0, calc(100% - 4px) 0, 100% 4px, 100% 100%, 4px 100%, 0 calc(100% - 4px));
+    }
+
+    /* ══ SIDE PROGRESS BAR ══ */
+    #story-progress-wrap {
+      position: fixed;
+      right: 2.5rem;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 50;
+      display: flex;
+      flex-direction: column;
+      gap: .6rem;
+      align-items: center;
+      opacity: 0;
+      transition: opacity .4s;
+    }
+
+    #story-progress-wrap.visible {
+      opacity: 1;
+    }
+
+    .prog-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      border: 1px solid rgba(204, 34, 0, .4);
+      background: transparent;
+      transition: background .3s, transform .3s, border-color .3s;
+      cursor: pointer;
+    }
+
+    .prog-dot.active {
+      background: var(--red2);
+      border-color: var(--red2);
+      transform: scale(1.4);
+      box-shadow: 0 0 8px var(--red-glow);
+    }
+
+    .prog-dot.done {
+      background: rgba(204, 34, 0, .4);
+      border-color: rgba(204, 34, 0, .4);
+    }
+
+    /* ══ STORY SECTION LABEL ══ */
+    #story-label {
+      position: fixed;
+      left: 2.5rem;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 50;
+      font-family: 'Space Mono', monospace;
+      font-size: .55rem;
+      letter-spacing: .2em;
+      color: rgba(204, 34, 0, .4);
+      text-transform: uppercase;
+      writing-mode: vertical-rl;
+      opacity: 0;
+      transition: opacity .4s;
+    }
+
+    #story-label.visible {
+      opacity: 1;
+    }
+
+    /* scroll nudge arrow */
+    #scroll-nudge {
+      position: fixed;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 50;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: .4rem;
+      font-family: 'Space Mono', monospace;
+      font-size: .5rem;
+      letter-spacing: .15em;
+      color: var(--muted);
+      text-transform: uppercase;
+      opacity: 0;
+      transition: opacity .4s;
+      pointer-events: none;
+    }
+
+    #scroll-nudge.visible {
+      opacity: 1;
+    }
+
+    .nudge-arrow {
+      width: 1px;
+      height: 32px;
+      background: linear-gradient(to bottom, var(--red), transparent);
+      animation: sp 1.8s ease-in-out infinite;
+    }
+
+    /* ══ TICKER ══ */
+    .ticker-wrap {
+      position: relative;
+      z-index: 2;
+      overflow: hidden;
+      padding: 1rem 0;
+      background: rgba(204, 34, 0, .07);
+      border-top: 1px solid rgba(204, 34, 0, .2);
+      border-bottom: 1px solid rgba(204, 34, 0, .2);
+    }
+
+    .t-track {
+      display: flex;
+      animation: tick 30s linear infinite;
+      white-space: nowrap;
+    }
+
+    .t-item {
+      font-family: 'Space Mono', monospace;
+      font-size: .62rem;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      color: rgba(204, 34, 0, .65);
+      padding: 0 2.5rem;
+      flex-shrink: 0;
+    }
+
+    .t-sep {
+      color: rgba(204, 34, 0, .3);
+    }
+
+    @keyframes tick {
+      from {
+        transform: translateX(0)
+      }
+
+      to {
+        transform: translateX(-50%)
+      }
+    }
+
+    /* ══ SECTIONS ══ */
+    .sec-wrap {
+      position: relative;
+      z-index: 2;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 8rem 4rem;
+    }
+
+    .s-label {
+      font-family: 'Space Mono', monospace;
+      font-size: .58rem;
+      letter-spacing: .22em;
+      color: var(--red2);
+      text-transform: uppercase;
+      margin-bottom: .9rem;
+      display: flex;
+      align-items: center;
+      gap: .6rem;
+    }
+
+    .s-label::before {
+      content: '//';
+      color: rgba(204, 34, 0, .4);
+    }
+
+    .s-title {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: clamp(2.5rem, 5vw, 4.5rem);
+      line-height: .92;
+      margin-bottom: 3.5rem;
+    }
+
+    .s-title .r {
+      color: var(--red2);
+      text-shadow: 0 0 30px var(--red-glow);
+    }
+
+    .reveal {
+      opacity: 0;
+      transform: translateY(24px);
+      transition: opacity .7s ease, transform .7s ease;
+    }
+
+    .reveal.in {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ══ ABOUT ══ */
+    .about-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 3rem;
+      align-items: start;
+    }
+
+    .profile-card {
+      position: relative;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      clip-path: polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 20px 100%, 0 calc(100% - 20px));
+      overflow: hidden;
+      box-shadow: 0 0 40px rgba(204, 34, 0, .08);
+    }
+
+    .profile-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--red), transparent);
+      z-index: 2;
+    }
+
+    .profile-img-wrap {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .profile-img-wrap img {
+      width: 100%;
+      height: auto;
+      display: block;
+      filter: contrast(1.05) saturate(.9);
+    }
+
+    .profile-img-wrap::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 60px;
+      background: linear-gradient(to top, var(--bg2), transparent);
+    }
+
+    .profile-info {
+      padding: 1.5rem 2rem 2rem;
+    }
+
+    .profile-name {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 1.6rem;
+      color: var(--text);
+      margin-bottom: .3rem;
+    }
+
+    .profile-title {
+      font-family: 'Space Mono', monospace;
+      font-size: .62rem;
+      letter-spacing: .14em;
+      color: var(--red2);
+      text-transform: uppercase;
+    }
+
+    .profile-from {
+      font-family: 'Space Mono', monospace;
+      font-size: .55rem;
+      letter-spacing: .1em;
+      color: var(--muted);
+      margin-top: .4rem;
+    }
+
+    .glass-panel {
+      background: rgba(14, 1, 1, .8);
+      border: 1px solid var(--border);
+      clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 14px 100%, 0 calc(100% - 14px));
+      padding: 2rem;
+      position: relative;
+      overflow: hidden;
+      margin-bottom: 1rem;
+    }
+
+    .glass-panel::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(204, 34, 0, .5), transparent);
+    }
+
+    .about-text p {
+      color: var(--muted);
+      font-size: .9rem;
+      line-height: 1.9;
+      margin-bottom: 1rem;
+      font-weight: 300;
+    }
+
+    .about-text p:last-child {
+      margin-bottom: 0;
+    }
+
+    .about-text strong {
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    .tools-stack {
+      display: flex;
+      flex-direction: column;
+      gap: .4rem;
+    }
+
+    .tool-row {
+      display: flex;
+      align-items: center;
+      gap: .9rem;
+      background: rgba(14, 1, 1, .6);
+      border: 1px solid rgba(204, 34, 0, .15);
+      padding: .75rem 1rem;
+      clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px));
+      transition: background .2s, border-color .2s;
+    }
+
+    .tool-row:hover {
+      background: rgba(204, 34, 0, .08);
+      border-color: var(--red);
+    }
+
+    .t-ico {
+      font-size: .95rem;
+      width: 26px;
+      text-align: center;
+    }
+
+    .t-name {
+      font-size: .78rem;
+      font-weight: 500;
+      color: var(--text);
+    }
+
+    .t-sub {
+      font-family: 'Space Mono', monospace;
+      font-size: .56rem;
+      color: var(--muted);
+      margin-top: .1rem;
+      letter-spacing: .04em;
+    }
+
+    /* ══ CONTACT ══ */
+    .ct-outer {
+      position: relative;
+      z-index: 2;
+      padding: 4rem 4rem 8rem;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .ct-glass {
+      background: rgba(14, 1, 1, .9);
+      border: 1px solid var(--border);
+      clip-path: polygon(0 0, calc(100% - 24px) 0, 100% 24px, 100% 100%, 24px 100%, 0 calc(100% - 24px));
+      padding: 4rem;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 0 60px rgba(204, 34, 0, .06);
+    }
+
+    .ct-glass::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--red), transparent);
+    }
+
+    .ct-glass::after {
+      content: '';
+      position: absolute;
+      bottom: -100px;
+      right: -100px;
+      width: 300px;
+      height: 300px;
+      background: radial-gradient(circle, rgba(204, 34, 0, .1), transparent 70%);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    .ct-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 5rem;
+      align-items: center;
+    }
+
+    .ct-headline {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: clamp(2.5rem, 4.5vw, 4rem);
+      line-height: .9;
+      margin-bottom: 1.5rem;
+    }
+
+    .ct-headline .r {
+      color: var(--red2);
+      text-shadow: 0 0 30px var(--red-glow);
+    }
+
+    .ct-sub {
+      font-size: .85rem;
+      color: var(--muted);
+      line-height: 1.75;
+      font-weight: 300;
+      margin-bottom: 2rem;
+    }
+
+    .ct-email-link {
+      display: inline-flex;
+      align-items: center;
+      gap: .6rem;
+      font-family: 'Space Mono', monospace;
+      font-size: .78rem;
+      color: var(--text);
+      text-decoration: none;
+      border-bottom: 1px solid rgba(204, 34, 0, .4);
+      padding-bottom: 3px;
+      transition: color .2s, border-color .2s;
+    }
+
+    .ct-email-link:hover {
+      color: var(--red2);
+      border-color: var(--red2);
+    }
+
+    .ct-links {
+      display: flex;
+      flex-direction: column;
+      gap: .5rem;
+    }
+
+    .c-link {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: .9rem 1.1rem;
+      background: rgba(204, 34, 0, .05);
+      border: 1px solid rgba(204, 34, 0, .15);
+      clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px));
+      text-decoration: none;
+      color: var(--muted);
+      font-size: .78rem;
+      transition: background .2s, border-color .2s, color .2s, transform .2s;
+    }
+
+    .c-link:hover {
+      background: rgba(204, 34, 0, .12);
+      border-color: var(--red);
+      color: var(--text);
+      transform: translateX(5px);
+    }
+
+    .c-link-l {
+      display: flex;
+      align-items: center;
+      gap: .7rem;
+    }
+
+    .c-arr {
+      opacity: .3;
+      transition: opacity .2s;
+    }
+
+    .c-link:hover .c-arr {
+      opacity: 1;
+    }
+
+    /* ══ FOOTER ══ */
+    footer {
+      position: relative;
+      z-index: 2;
+      border-top: 1px solid rgba(204, 34, 0, .15);
+      padding: 2rem 4rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .f-logo {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: .95rem;
+      letter-spacing: .06em;
+      text-decoration: none;
+      color: var(--text);
+    }
+
+    .f-logo em {
+      font-style: normal;
+      color: var(--red2);
+    }
+
+    .f-copy {
+      font-family: 'Space Mono', monospace;
+      font-size: .52rem;
+      color: var(--muted);
+      letter-spacing: .08em;
+    }
+
+    /* ══ MODAL ══ */
+    #modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 9000;
+      background: rgba(0, 0, 0, .96);
+      backdrop-filter: blur(12px);
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+
+    #modal.open {
+      display: flex;
+    }
+
+    .m-box {
+      position: relative;
+      width: 100%;
+      max-width: 440px;
+      background: rgba(14, 1, 1, .9);
+      border: 1px solid var(--red);
+      clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 14px 100%, 0 calc(100% - 14px));
+      overflow: hidden;
+      box-shadow: 0 0 80px rgba(204, 34, 0, .2), 0 32px 80px rgba(0, 0, 0, .8);
+    }
+
+    .m-box::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--red2), transparent);
+      z-index: 1;
+    }
+
+    #mvid {
+      width: 100%;
+      max-height: 85vh;
+      display: block;
+      background: #000;
+    }
+
+    .m-close {
+      position: absolute;
+      top: .75rem;
+      right: .75rem;
+      z-index: 10;
+      background: rgba(204, 34, 0, .25);
+      border: 1px solid var(--red);
+      clip-path: polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 6px 100%, 0 calc(100% - 6px));
+      color: #fff;
+      font-family: 'Space Mono', monospace;
+      font-size: .58rem;
+      letter-spacing: .08em;
+      padding: .3rem .85rem;
+      cursor: pointer;
+      transition: background .2s;
+    }
+
+    .m-close:hover {
+      background: var(--red);
+    }
+
+    /* ══ ANIMATIONS ══ */
+    @keyframes fadeUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+
+      to {
+        opacity: 1;
+      }
+    }
+
+    /* ══ YOUTUBE SECTION ══ */
+    .yt-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 3.5rem;
+      align-items: start;
+    }
+
+    .yt-channel-card {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      background: rgba(14, 1, 1, .8);
+      border: 1px solid var(--border);
+      clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px));
+      padding: 1rem 1.4rem;
+      margin-bottom: 1.5rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .yt-channel-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(204, 34, 0, .5), transparent);
+    }
+
+    .yt-logo-wrap {
+      width: 54px;
+      height: 54px;
+      border-radius: 50%;
+      overflow: hidden;
+      border: 2px solid var(--red);
+      flex-shrink: 0;
+      box-shadow: 0 0 16px var(--red-glow);
+    }
+
+    .yt-logo-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .yt-channel-name {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 1.05rem;
+      color: var(--text);
+    }
+
+    .yt-channel-sub {
+      font-family: 'Space Mono', monospace;
+      font-size: .54rem;
+      color: var(--red2);
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      margin-top: .25rem;
+    }
+
+    .yt-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: .7rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .yt-stat {
+      background: rgba(204, 34, 0, .07);
+      border: 1px solid var(--border);
+      clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px));
+      padding: 1.1rem .8rem;
+      text-align: center;
+    }
+
+    .yt-stat-num {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 1.75rem;
+      color: var(--red2);
+      line-height: 1;
+      text-shadow: 0 0 20px var(--red-glow);
+    }
+
+    .yt-stat-label {
+      font-family: 'Space Mono', monospace;
+      font-size: .48rem;
+      letter-spacing: .1em;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-top: .5rem;
+      line-height: 1.4;
+    }
+
+    .yt-screenshots {
+      display: flex;
+      flex-direction: column;
+      gap: 1.2rem;
+    }
+
+    .yt-shot-card {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 0 40px rgba(204, 34, 0, .18), 0 24px 60px rgba(0, 0, 0, .65);
+      position: relative;
+    }
+
+    .yt-shot-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--red2), transparent);
+      z-index: 2;
+    }
+
+    .yt-shot-card img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    /* ══ IMAGE GRID ══ */
+    .img-grid {
+      columns: 3;
+      column-gap: 1rem;
+    }
+
+    .img-tile {
+      break-inside: avoid;
+      margin-bottom: 1rem;
+      position: relative;
+      overflow: hidden;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      cursor: pointer;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, .55);
+      transition: transform .3s, box-shadow .3s;
+    }
+
+    .img-tile:hover {
+      transform: scale(1.025);
+      box-shadow: 0 0 32px rgba(204, 34, 0, .3), 0 16px 50px rgba(0, 0, 0, .7);
+    }
+
+    .img-tile img {
+      width: 100%;
+      height: auto;
+      display: block;
+      transition: filter .3s;
+    }
+
+    .img-tile:hover img {
+      filter: brightness(.6);
+    }
+
+    .img-tile-ov {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity .3s;
+    }
+
+    .img-tile:hover .img-tile-ov {
+      opacity: 1;
+    }
+
+    .img-zoom {
+      width: 46px;
+      height: 46px;
+      background: rgba(204, 34, 0, .88);
+      border: 1px solid var(--red2);
+      clip-path: polygon(0 0, calc(100% - 7px) 0, 100% 7px, 100% 100%, 7px 100%, 0 calc(100% - 7px));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 20px var(--red-glow);
+    }
+
+    .img-zoom svg {
+      width: 18px;
+      height: 18px;
+      stroke: #fff;
+      fill: none;
+      stroke-width: 2;
+    }
+
+    /* image lightbox */
+    #img-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 9001;
+      background: rgba(0, 0, 0, .97);
+      backdrop-filter: blur(14px);
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+
+    #img-modal.open {
+      display: flex;
+    }
+
+    .img-m-box {
+      position: relative;
+      max-width: 90vw;
+      max-height: 90vh;
+    }
+
+    .img-m-box .m-close {
+      position: absolute;
+      top: -.6rem;
+      right: -.6rem;
+      z-index: 2;
+    }
+
+    #modal-img {
+      max-width: 100%;
+      max-height: 85vh;
+      display: block;
+      border: 1px solid var(--red);
+      border-radius: 10px;
+      box-shadow: 0 0 60px rgba(204, 34, 0, .2), 0 32px 80px rgba(0, 0, 0, .8);
+    }
+
+    /* ══ CAPABILITIES ══ */
+    .caps-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+      align-items: start;
+    }
+
+    .cap-card {
+      background: rgba(14, 1, 1, .85);
+      border: 1px solid var(--border);
+      clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 16px 100%, 0 calc(100% - 16px));
+      padding: 2.5rem;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      gap: 1.4rem;
+    }
+
+    .cap-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--red), transparent);
+    }
+
+    .cap-icon-wrap {
+      width: 52px;
+      height: 52px;
+      background: rgba(204, 34, 0, .1);
+      border: 1px solid var(--border);
+      clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+    }
+
+    .cap-title {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 1.55rem;
+      line-height: 1.05;
+      color: var(--text);
+    }
+
+    .cap-title em {
+      font-style: normal;
+      color: var(--red2);
+    }
+
+    .cap-desc {
+      font-size: .88rem;
+      color: var(--muted);
+      line-height: 1.85;
+      font-weight: 300;
+    }
+
+    .cap-desc strong {
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    .cap-stat-row {
+      display: flex;
+      gap: .5rem;
+      flex-wrap: wrap;
+    }
+
+    .cap-stat {
+      font-family: 'Space Mono', monospace;
+      font-size: .53rem;
+      letter-spacing: .1em;
+      color: var(--red2);
+      background: rgba(204, 34, 0, .08);
+      border: 1px solid var(--border);
+      clip-path: polygon(0 0, calc(100% - 5px) 0, 100% 5px, 100% 100%, 5px 100%, 0 calc(100% - 5px));
+      padding: .35rem .8rem;
+      text-transform: uppercase;
+    }
+
+    .cap-browser {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 0 40px rgba(204, 34, 0, .15), 0 20px 50px rgba(0, 0, 0, .6);
+    }
+
+    .cap-browser-bar {
+      background: rgba(6, 0, 0, .95);
+      padding: .55rem .85rem;
+      display: flex;
+      align-items: center;
+      gap: .45rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .cap-browser-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .cap-browser-url {
+      flex: 1;
+      background: rgba(204, 34, 0, .06);
+      border: 1px solid rgba(204, 34, 0, .15);
+      border-radius: 4px;
+      padding: .22rem .7rem;
+      font-family: 'Space Mono', monospace;
+      font-size: .48rem;
+      color: var(--muted);
+      margin-left: .5rem;
+      letter-spacing: .04em;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .cap-browser video {
+      width: 100%;
+      display: block;
+      max-height: 260px;
+      object-fit: cover;
+    }
+
+    /* ══ RESPONSIVE ══ */
+    @media(max-width:900px) {
+      nav {
+        width: calc(100% - 2rem);
+        padding: .8rem 1.2rem;
+      }
+
+      .nav-links {
+        display: none;
+      }
+
+      .slide {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+        padding: 5rem 2rem 2rem;
+        align-items: start;
+        overflow-y: auto;
+      }
+
+      .slide-video-wrap {
+        max-width: 200px;
+      }
+
+      .sec-wrap {
+        padding: 5rem 1.5rem;
+      }
+
+      .about-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .ct-outer {
+        padding: 3rem 1.5rem 6rem;
+      }
+
+      .ct-glass {
+        padding: 2.5rem 1.5rem;
+      }
+
+      .ct-layout {
+        grid-template-columns: 1fr;
+        gap: 2.5rem;
+      }
+
+      footer {
+        padding: 1.5rem;
+        flex-direction: column;
+        gap: .4rem;
+        text-align: center;
+      }
+
+      #story-label,
+      #story-progress-wrap {
+        display: none;
+      }
+
+      .yt-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .img-grid {
+        columns: 1;
+      }
+
+      .caps-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <canvas id="space-canvas"></canvas>
+
+  <!-- CURSOR -->
+  <div id="cur-wrap">
+    <svg id="cur-default" viewBox="0 0 44 44" fill="none">
+      <!-- outer faint ring -->
+      <circle cx="22" cy="22" r="11" stroke="rgba(204,34,0,0.22)" stroke-width="0.8" />
+      <!-- inner ring -->
+      <circle cx="22" cy="22" r="6" stroke="#CC2200" stroke-width="0.9" opacity=".5" />
+      <!-- center node -->
+      <circle cx="22" cy="22" r="2.8" fill="#FF3A1A" />
+      <!-- trace: top -->
+      <line x1="22" y1="11" x2="22" y2="5.5" stroke="#CC2200" stroke-width="0.9" />
+      <rect x="19.8" y="3.4" width="4.4" height="2.6" rx="0.6" fill="rgba(204,34,0,0.3)" stroke="#CC2200"
+        stroke-width="0.7" />
+      <!-- trace: right with 90° bend -->
+      <polyline points="28,22 37,22 37,16.5" stroke="#CC2200" stroke-width="0.9" fill="none" />
+      <circle cx="37" cy="15" r="1.8" fill="rgba(204,34,0,0.35)" stroke="#FF3A1A" stroke-width="0.7" />
+      <!-- trace: bottom-left with 90° bend -->
+      <polyline points="18.5,27.5 18.5,36 10.5,36" stroke="#CC2200" stroke-width="0.9" fill="none" />
+      <rect x="7.8" y="34.2" width="3.2" height="3.4" rx="0.5" fill="rgba(204,34,0,0.3)" stroke="#CC2200"
+        stroke-width="0.7" />
+      <!-- trace: left -->
+      <line x1="11" y1="22" x2="5.5" y2="22" stroke="#CC2200" stroke-width="0.9" />
+      <circle cx="4" cy="22" r="1.5" fill="rgba(204,34,0,0.45)" stroke="#CC2200" stroke-width="0.7" />
+    </svg>
+    <svg id="cur-hover" viewBox="0 0 40 40" fill="none" style="position:absolute;top:0;left:0;">
+      <!-- outer ring -->
+      <circle cx="20" cy="20" r="14" stroke="rgba(204,34,0,0.3)" stroke-width="0.8" />
+      <!-- mid ring -->
+      <circle cx="20" cy="20" r="8" stroke="#FF3A1A" stroke-width="1" opacity=".65" />
+      <!-- center node -->
+      <circle cx="20" cy="20" r="3" fill="#FF3A1A" />
+      <!-- 4 cardinal node dots -->
+      <circle cx="20" cy="5" r="2" fill="rgba(255,58,26,0.55)" stroke="#CC2200" stroke-width="0.7" />
+      <circle cx="35" cy="20" r="2" fill="rgba(255,58,26,0.55)" stroke="#CC2200" stroke-width="0.7" />
+      <circle cx="20" cy="35" r="2" fill="rgba(255,58,26,0.55)" stroke="#CC2200" stroke-width="0.7" />
+      <circle cx="5" cy="20" r="2" fill="rgba(255,58,26,0.55)" stroke="#CC2200" stroke-width="0.7" />
+      <!-- connecting traces -->
+      <line x1="20" y1="12" x2="20" y2="7" stroke="#CC2200" stroke-width="0.9" />
+      <line x1="28" y1="20" x2="33" y2="20" stroke="#CC2200" stroke-width="0.9" />
+      <line x1="20" y1="28" x2="20" y2="33" stroke="#CC2200" stroke-width="0.9" />
+      <line x1="12" y1="20" x2="7" y2="20" stroke="#CC2200" stroke-width="0.9" />
+    </svg>
+  </div>
+
+  <!-- NAV -->
+  <nav>
+    <a href="#hero" class="logo">BADAL<em>WORKS</em></a>
+    <ul class="nav-links">
+      <li><a href="#about">About</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul>
+    <a href="mailto:badalkabi2001@gmail.com" class="nav-pill">Get in Touch</a>
+  </nav>
+
+  <!-- ══ HERO ══ -->
+  <section id="hero">
+    <div id="orbit-scene"></div>
+    <div class="hero-center">
+      <div class="hero-status"><span class="sdot"></span>AI Creative Specialist · Open to Work</div>
+      <h1 class="hero-name">
+        <div class="w">BADAL</div>
+        <div class="r">WORKS.</div>
+      </h1>
+      <p class="hero-role">AI Video · Image Generation · Creative Workflows</p>
+      <p class="hero-sub">I create <strong>AI-generated video and image content</strong> and build the <strong>automated
+          creative workflows</strong> behind them.</p>
+      <div class="hero-btns">
+        <a href="#story-outer" class="btn-red">See My Work</a>
+        <a href="#about" class="btn-ghost">About Me</a>
+      </div>
+    </div>
+    <div class="scroll-hint">
+      <div class="scroll-line"></div>
+      <div class="scroll-text">Scroll to explore</div>
+    </div>
+  </section>
+
+  <!-- ══ SCROLL STORY ══ -->
+  <div id="story-outer">
+    <div id="story-sticky">
+      <div id="story-slides">
+
+        <div class="slide" data-index="0">
+          <div class="slide-video-wrap">
+            <div class="slide-video-frame">
+              <video src="https://res.cloudinary.com/ddag6l8pj/video/upload/q_auto/f_auto/v1777755463/0209_1_tz3o7m.mp4"
+                preload="metadata" muted loop playsinline></video>
+            </div>
+            <div class="slide-play"
+              onclick="openVid('https://res.cloudinary.com/ddag6l8pj/video/upload/q_auto/f_auto/v1777755463/0209_1_tz3o7m.mp4')">
+              <svg viewBox="0 0 24 24">
+                <polygon points="5,3 19,12 5,21" />
+              </svg>
+            </div>
+          </div>
+          <div class="slide-desc">
+            <div class="slide-count">01 / 08</div>
+            <div class="slide-tag">AI Video · Brand Ad</div>
+            <h2 class="slide-title">Climatecraft Technologies<br><em>Recliner Ad</em></h2>
+            <p class="slide-body">Cinematic product ad for <strong>Climatecraft Technologies</strong> showcasing a
+              temperature-controlled recliner designed for personalized comfort. The main focus is the concept of
+              putting an unusual element in an unusual environment, creating an engaging hook.</p>
+            <div class="slide-tools"><span class="slide-tool">Kling 3.0</span><span class="slide-tool">Prompt
+                Engineering</span><span class="slide-tool">CapCut</span></div>
+          </div>
+        </div>
+
+        <div class="slide" data-index="1">
+          <div class="slide-video-wrap">
+            <div class="slide-video-frame">
+              <video src="https://res.cloudinary.com/ddag6l8pj/video/upload/q_auto/f_auto/v1777755469/0318_4_xroisp.mp4"
+                preload="metadata" muted loop playsinline></video>
+            </div>
+            <div class="slide-play"
+              onclick="openVid('https://res.cloudinary.com/ddag6l8pj/video/upload/q_auto/f_auto/v1777755469/0318_4_xroisp.mp4')">
+              <svg viewBox="0 0 24 24">
+                <polygon points="5,3 19,12 5,21" />
+              </svg>
+            </div>
+          </div>
+          <div class="slide-desc">
+            <div class="slide-count">02 / 08</div>
+            <div class="slide-tag">AI Video · Brand Ad</div>
+            <h2 class="slide-title">Zochii<br><em>Skincare Glow Campaign</em></h2>
+            <p class="slide-body">High-converting skincare advertisement created for <strong>Zochii</strong>, centered
+              around radiant skin visuals and luxury beauty aesthetics. The campaign reached over <strong>100K
+                impressions</strong> across social platforms.</p>
+            <div class="slide-tools"><span class="slide-tool">Kling 3.0</span><span class="slide-tool">Nano Banana
+                Pro</span><span class="slide-tool">CapCut</span></div>
+          </div>
+        </div>
+
+        <div class="slide" data-index="2">
+          <div class="slide-video-wrap">
+            <div class="slide-video-frame">
+              <video
+                src="https://res.cloudinary.com/ddag6l8pj/video/upload/q_auto/f_auto/v1778497759/0325_2_7_gx7mzy.mp4"
+                preload="metadata" muted loop playsinline></video>
+            </div>
+            <div class="slide-play"
+              onclick="openVid('https://res.cloudinary.com/ddag6l8pj/video/upload/q_auto/f_auto/v1778497759/0325_2_7_gx7mzy.mp4')">
+              <svg viewBox="0 0 24 24">
+                <polygon points="5,3 19,12 5,21" />
+              </svg>
+            </div>
+          </div>
+          <div class="slide-desc">
+            <div class="slide-count">03 / 08</div>
+            <div class="slide-tag">AI Video · UGC Ad</div>
+            <h2 class="slide-title">Devriz<br><em>Postpartum Skincare</em></h2>
+            <p class="slide-body">UGC-style skincare ad developed for <strong>Devriz</strong>, focused on postpartum
+              pigmentation treatment. Built around authentic storytelling, product education, and natural-looking visual
+              delivery.</p>
+            <div class="slide-tools"><span class="slide-tool">Freepik</span><span class="slide-tool">Kling
+                3.0</span><span class="slide-tool">Kling Motion Control</span><span class="slide-tool">ElevenLabs</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="slide" data-index="3">
+          <div class="slide-video-wrap">
+            <div class="slide-video-frame">
+              <video
+                src="https://res.cloudinary.com/ddag6l8pj/video/upload/q_auto/f_auto/v1778497796/1023_1_3_sp3kvf.mp4"
+                preload="metadata" muted loop playsinline></video>
+            </div>
+            <div class="slide-play"
+              onclick="openVid('https://res.cloudinary.com/ddag6l8pj/video/upload/q_auto/f_auto/v1778497796/1023_1_3_sp3kvf.mp4')">
+              <svg viewBox="0 0 24 24">
+                <polygon points="5,3 19,12 5,21" />
+              </svg>
+            </div>
+          </div>
+          <div class="slide-desc">
+            <div class="slide-count">04 / 08</div>
+            <div class="slide-tag">AI Video · Social Media</div>
+            <h2 class="slide-title">Skin Exfoliation<br><em>Educational UGC</em></h2>
+            <p class="slide-body">Educational skincare content explaining proper exfoliation techniques through
+              <strong>short-form UGC storytelling</strong> designed for social-first engagement and retention.</p>
+            <div class="slide-tools"><span class="slide-tool">Nano Banana</span><span class="slide-tool">Veo
+                3</span><span class="slide-tool">Premiere Pro</span></div>
+          </div>
+        </div>
+
+        <div class="slide" data-index="4">
+          <div class="slide-video-wrap">
+            <div class="slide-video-frame">
+              <video
+                src="https://res.cloudinary.com/ddag6l8pj/video/upload/q_auto/f_auto/v1778498172/0225_12_jurl1n.mp4"
+                preload="metadata" muted loop playsinline></video>
+            </div>
+            <div class="slide-play"
+              onclick="openVid('https://res.cloudinary.com/ddag6l8pj/video/upload/q_auto/f_auto/v1778498172/0225_12_jurl1n.mp4')">
+              <svg viewBox="0 0 24 24">
+                <polygon points="5,3 19,12 5,21" />
+              </svg>
+            </div>
+          </div>
+          <div class="slide-desc">
+            <div class="slide-count">05 / 08</div>
+            <div class="slide-tag">AI Video · Meta Ad</div>
+            <h2 class="slide-title">Zumm<br><em>AI Travel Planner</em></h2>
+            <p class="slide-body">Short-form Meta advertisement for <strong>Zumm</strong> — an AI-powered travel
+              planning platform designed to simplify trip organization and reduce planning friction through intelligent
+              automation.</p>
+            <div class="slide-tools"><span class="slide-tool">Kling Motion Control</span><span
+                class="slide-tool">Editing Workflow</span></div>
+          </div>
+        </div>
+
+        <div class="slide" data-index="5">
+          <div class="slide-video-wrap">
+            <div class="slide-video-frame">
+              <video
+                src="https://res.cloudinary.com/ddag6l8pj/video/upload/q_auto/f_auto/v1778498191/0310_1_2_svexrj.mp4"
+                preload="metadata" muted loop playsinline></video>
+            </div>
+            <div class="slide-play"
+              onclick="openVid('https://res.cloudinary.com/ddag6l8pj/video/upload/q_auto/f_auto/v1778498191/0310_1_2_svexrj.mp4')">
+              <svg viewBox="0 0 24 24">
+                <polygon points="5,3 19,12 5,21" />
+              </svg>
+            </div>
+          </div>
+          <div class="slide-desc">
+            <div class="slide-count">06 / 08</div>
+            <div class="slide-tag">AI Video · Social Campaign</div>
+            <h2 class="slide-title">Zochii<br><em>Teaser Story Campaign</em></h2>
+            <p class="slide-body">Social media teaser campaign created for <strong>Zochii</strong> to build anticipation
+              around an upcoming skincare launch using cinematic pacing and minimalist product storytelling.</p>
+            <div class="slide-tools"><span class="slide-tool">Nano Banana Pro</span><span
+                class="slide-tool">Seedance</span><span class="slide-tool">CapCut</span></div>
+          </div>
+        </div>
+
+        <div class="slide" data-index="6">
+          <div class="slide-video-wrap">
+            <div class="slide-video-frame">
+              <video src="https://res.cloudinary.com/ddag6l8pj/video/upload/q_auto/f_auto/v1778498210/0313_1_oqfvke.mp4"
+                preload="metadata" muted loop playsinline></video>
+            </div>
+            <div class="slide-play"
+              onclick="openVid('https://res.cloudinary.com/ddag6l8pj/video/upload/q_auto/f_auto/v1778498210/0313_1_oqfvke.mp4')">
+              <svg viewBox="0 0 24 24">
+                <polygon points="5,3 19,12 5,21" />
+              </svg>
+            </div>
+          </div>
+          <div class="slide-desc">
+            <div class="slide-count">07 / 08</div>
+            <div class="slide-tag">AI Video · Product Launch</div>
+            <h2 class="slide-title">Zochii<br><em>Product Launch Film</em></h2>
+            <p class="slide-body">Hybrid commercial launch video combining <strong>AI-generated sequences with real
+                footage</strong> to create a polished beauty campaign centered around glowing skin and premium skincare
+              branding.</p>
+            <div class="slide-tools"><span class="slide-tool">Kling 3.0</span><span class="slide-tool">Multi-Model Video
+                Workflow</span><span class="slide-tool">CapCut</span></div>
+          </div>
+        </div>
+
+        <div class="slide" data-index="7">
+          <div class="slide-video-wrap">
+            <div class="slide-video-frame">
+              <video src="https://res.cloudinary.com/ddag6l8pj/video/upload/q_auto/f_auto/v1777755473/0429_aiij4g.mp4"
+                preload="metadata" muted loop playsinline></video>
+            </div>
+            <div class="slide-play"
+              onclick="openVid('https://res.cloudinary.com/ddag6l8pj/video/upload/q_auto/f_auto/v1777755473/0429_aiij4g.mp4')">
+              <svg viewBox="0 0 24 24">
+                <polygon points="5,3 19,12 5,21" />
+              </svg>
+            </div>
+          </div>
+          <div class="slide-desc">
+            <div class="slide-count">08 / 08</div>
+            <div class="slide-tag">AI Video · Cinematic Brand Ad</div>
+            <h2 class="slide-title">Tripple<br><em>Memory Platform Campaign</em></h2>
+            <p class="slide-body">Concept-driven cinematic advertisement for <strong>Tripple</strong> — a platform
+              centered around preserving memories and meaningful moments. Built with a strong emotional narrative and
+              visually immersive storytelling approach.</p>
+            <div class="slide-tools"><span class="slide-tool">Claude</span><span class="slide-tool">Nano
+                Banana</span><span class="slide-tool">Kling 3.0</span></div>
+          </div>
+        </div>
+
+      </div><!-- /story-slides -->
+    </div><!-- /story-sticky -->
+  </div><!-- /story-outer -->
+
+  <!-- Side progress dots -->
+  <div id="story-progress-wrap">
+    <div class="prog-dot" data-i="0"></div>
+    <div class="prog-dot" data-i="1"></div>
+    <div class="prog-dot" data-i="2"></div>
+    <div class="prog-dot" data-i="3"></div>
+    <div class="prog-dot" data-i="4"></div>
+    <div class="prog-dot" data-i="5"></div>
+    <div class="prog-dot" data-i="6"></div>
+    <div class="prog-dot" data-i="7"></div>
+  </div>
+  <div id="story-label">Work · Scroll to explore</div>
+  <div id="scroll-nudge">
+    <div class="nudge-arrow"></div><span>Scroll</span>
+  </div>
+
+  <!-- TICKER -->
+  <div class="ticker-wrap">
+    <div class="t-track">
+      <span class="t-item">AI Video Generation <span class="t-sep">◆</span></span>
+      <span class="t-item">AI Image Generation <span class="t-sep">◆</span></span>
+      <span class="t-item">Creative Workflows <span class="t-sep">◆</span></span>
+      <span class="t-item">Prompt Engineering <span class="t-sep">◆</span></span>
+      <span class="t-item">Claude · Gemini · Perplexity <span class="t-sep">◆</span></span>
+      <span class="t-item">Kling · Magnific · Freepik <span class="t-sep">◆</span></span>
+      <span class="t-item">Elevenlabs · HeyGen <span class="t-sep">◆</span></span>
+      <span class="t-item">AI Video Generation <span class="t-sep">◆</span></span>
+      <span class="t-item">AI Image Generation <span class="t-sep">◆</span></span>
+      <span class="t-item">Creative Workflows <span class="t-sep">◆</span></span>
+      <span class="t-item">Prompt Engineering <span class="t-sep">◆</span></span>
+      <span class="t-item">Claude · Gemini · Perplexity <span class="t-sep">◆</span></span>
+      <span class="t-item">Kling · Magnific · Freepik <span class="t-sep">◆</span></span>
+      <span class="t-item">Elevenlabs · HeyGen <span class="t-sep">◆</span></span>
+    </div>
+  </div>
+
+  <!-- ══ YOUTUBE CHANNEL ══ -->
+  <section id="youtube">
+    <div class="sec-wrap">
+      <div class="s-label reveal">YouTube</div>
+      <h2 class="s-title reveal">AI Educational <span class="r">Channel.</span></h2>
+      <div class="yt-grid">
+
+        <div class="reveal">
+          <div class="yt-channel-card">
+            <div class="yt-logo-wrap">
+              <img
+                src="https://res.cloudinary.com/ddag6l8pj/image/upload/q_auto/f_auto/v1778581793/Screenshot_2026-05-12_122801_fzdzzg.png"
+                alt="AIshorts-tech logo">
+            </div>
+            <div>
+              <div class="yt-channel-name">@AIshorts-tech</div>
+              <div class="yt-channel-sub">AI News &amp; Educational Shorts</div>
+            </div>
+          </div>
+
+          <div class="yt-stats">
+            <div class="yt-stat">
+              <div class="yt-stat-num">3K+</div>
+              <div class="yt-stat-label">Subscribers</div>
+            </div>
+            <div class="yt-stat">
+              <div class="yt-stat-num">300K+</div>
+              <div class="yt-stat-label">Peak Short Views</div>
+            </div>
+            <div class="yt-stat">
+              <div class="yt-stat-num">6 mo</div>
+              <div class="yt-stat-label">0 → 3K Growth</div>
+            </div>
+          </div>
+
+          <div class="glass-panel" style="margin-bottom:1.5rem;">
+            <div class="about-text">
+              <p>Managed this channel <strong>end to end</strong> — from idea generation and scripting to video editing,
+                posting, and day-to-day channel management.</p>
+              <p>Built <strong>automated workflows</strong> around the full production pipeline — AI-assisted scripting,
+                asset generation, scheduling, and publishing — making content production fast and repeatable at scale.
+              </p>
+              <p>Created using a blend of <strong>HeyGen, ElevenLabs</strong>, and other AI image and video generation
+                tools to deliver consistent, high-quality content. Individual Shorts reached <strong>100K, 200K, and
+                  300K+ views.</strong></p>
+            </div>
+          </div>
+
+          <div class="slide-tools" style="margin-bottom:1.8rem;">
+            <span class="slide-tool">HeyGen</span>
+            <span class="slide-tool">ElevenLabs</span>
+            <span class="slide-tool">AI Scripting</span>
+            <span class="slide-tool">n8n Workflows</span>
+            <span class="slide-tool">Asset Generation</span>
+          </div>
+
+          <a href="https://www.youtube.com/@AIshorts-tech" target="_blank" class="btn-red"
+            style="display:inline-flex;align-items:center;gap:.6rem;text-decoration:none;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+              <path
+                d="M23 7s-.3-1.9-1.2-2.7c-1.1-1.2-2.4-1.2-3-1.3C16.1 3 12 3 12 3s-4.1 0-6.8.2c-.6.1-1.9.1-3 1.3C1.3 5.3 1 7 1 7S.7 9.1.7 11.2v2c0 2.1.3 4.2.3 4.2s.3 1.9 1.2 2.7c1.1 1.2 2.6 1.1 3.3 1.2C7.2 21.5 12 21.5 12 21.5s4.1 0 6.8-.3c.6-.1 1.9-.1 3-1.3.9-.8 1.2-2.7 1.2-2.7s.3-2.1.3-4.2v-2C23.3 9.1 23 7 23 7zM9.7 15.5V8l6.5 3.8-6.5 3.7z" />
+            </svg>
+            Visit Channel
+          </a>
+        </div>
+
+        <div class="yt-screenshots reveal">
+          <div class="yt-shot-card">
+            <img
+              src="https://res.cloudinary.com/ddag6l8pj/image/upload/q_auto/f_auto/v1778581915/Screenshot_2026-05-12_122418_rducav.png"
+              alt="Channel videos">
+          </div>
+          <div class="yt-shot-card">
+            <img
+              src="https://res.cloudinary.com/ddag6l8pj/image/upload/q_auto/f_auto/v1778581794/Screenshot_2026-05-12_122516_wlilmt.png"
+              alt="Channel shorts">
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ AI VISUALS ══ -->
+  <section id="visuals">
+    <div class="sec-wrap">
+      <div class="s-label reveal">AI Image Work</div>
+      <h2 class="s-title reveal">Statics &amp; <span class="r">Posters.</span></h2>
+      <p class="reveal"
+        style="color:var(--muted);font-size:.88rem;line-height:1.8;max-width:520px;margin-bottom:3rem;font-weight:300;">
+        AI-generated visuals, posters, and static content — created across projects using tools like <strong
+          style="color:var(--text);">Midjourney, Freepik, Ideogram, and GPT Image</strong>. Click any to view full size.
+      </p>
+      <div class="img-grid reveal">
+
+        <div class="img-tile"
+          onclick="openImg('https://res.cloudinary.com/ddag6l8pj/image/upload/q_auto/f_auto/v1778584030/Screenshot_2026-05-12_123424_t4entq.png')">
+          <img
+            src="https://res.cloudinary.com/ddag6l8pj/image/upload/q_auto/f_auto/v1778584030/Screenshot_2026-05-12_123424_t4entq.png"
+            alt="AI Visual">
+          <div class="img-tile-ov">
+            <div class="img-zoom"><svg viewBox="0 0 24 24">
+                <circle cx="11" cy="11" r="7" />
+                <line x1="16.5" y1="16.5" x2="22" y2="22" />
+                <line x1="11" y1="8" x2="11" y2="14" />
+                <line x1="8" y1="11" x2="14" y2="11" />
+              </svg></div>
+          </div>
+        </div>
+
+        <div class="img-tile"
+          onclick="openImg('https://res.cloudinary.com/ddag6l8pj/image/upload/q_auto/f_auto/v1778584028/Screenshot_2026-05-12_125621_kex3ux.png')">
+          <img
+            src="https://res.cloudinary.com/ddag6l8pj/image/upload/q_auto/f_auto/v1778584028/Screenshot_2026-05-12_125621_kex3ux.png"
+            alt="AI Visual">
+          <div class="img-tile-ov">
+            <div class="img-zoom"><svg viewBox="0 0 24 24">
+                <circle cx="11" cy="11" r="7" />
+                <line x1="16.5" y1="16.5" x2="22" y2="22" />
+                <line x1="11" y1="8" x2="11" y2="14" />
+                <line x1="8" y1="11" x2="14" y2="11" />
+              </svg></div>
+          </div>
+        </div>
+
+        <div class="img-tile"
+          onclick="openImg('https://res.cloudinary.com/ddag6l8pj/image/upload/q_auto/f_auto/v1778584026/Screenshot_2026-05-12_125902_uwr4pm.png')">
+          <img
+            src="https://res.cloudinary.com/ddag6l8pj/image/upload/q_auto/f_auto/v1778584026/Screenshot_2026-05-12_125902_uwr4pm.png"
+            alt="AI Visual">
+          <div class="img-tile-ov">
+            <div class="img-zoom"><svg viewBox="0 0 24 24">
+                <circle cx="11" cy="11" r="7" />
+                <line x1="16.5" y1="16.5" x2="22" y2="22" />
+                <line x1="11" y1="8" x2="11" y2="14" />
+                <line x1="8" y1="11" x2="14" y2="11" />
+              </svg></div>
+          </div>
+        </div>
+
+        <div class="img-tile"
+          onclick="openImg('https://res.cloudinary.com/ddag6l8pj/image/upload/q_auto/f_auto/v1778584025/Screenshot_2026-05-12_125923_blemou.png')">
+          <img
+            src="https://res.cloudinary.com/ddag6l8pj/image/upload/q_auto/f_auto/v1778584025/Screenshot_2026-05-12_125923_blemou.png"
+            alt="AI Visual">
+          <div class="img-tile-ov">
+            <div class="img-zoom"><svg viewBox="0 0 24 24">
+                <circle cx="11" cy="11" r="7" />
+                <line x1="16.5" y1="16.5" x2="22" y2="22" />
+                <line x1="11" y1="8" x2="11" y2="14" />
+                <line x1="8" y1="11" x2="14" y2="11" />
+              </svg></div>
+          </div>
+        </div>
+
+        <div class="img-tile"
+          onclick="openImg('https://res.cloudinary.com/ddag6l8pj/image/upload/q_auto/f_auto/v1778584024/Screenshot_2026-05-12_125941_epcoxd.png')">
+          <img
+            src="https://res.cloudinary.com/ddag6l8pj/image/upload/q_auto/f_auto/v1778584024/Screenshot_2026-05-12_125941_epcoxd.png"
+            alt="AI Visual">
+          <div class="img-tile-ov">
+            <div class="img-zoom"><svg viewBox="0 0 24 24">
+                <circle cx="11" cy="11" r="7" />
+                <line x1="16.5" y1="16.5" x2="22" y2="22" />
+                <line x1="11" y1="8" x2="11" y2="14" />
+                <line x1="8" y1="11" x2="14" y2="11" />
+              </svg></div>
+          </div>
+        </div>
+
+        <div class="img-tile"
+          onclick="openImg('https://res.cloudinary.com/ddag6l8pj/image/upload/q_auto/f_auto/v1778584023/Screenshot_2026-05-12_130108_n6yyof.png')">
+          <img
+            src="https://res.cloudinary.com/ddag6l8pj/image/upload/q_auto/f_auto/v1778584023/Screenshot_2026-05-12_130108_n6yyof.png"
+            alt="AI Visual">
+          <div class="img-tile-ov">
+            <div class="img-zoom"><svg viewBox="0 0 24 24">
+                <circle cx="11" cy="11" r="7" />
+                <line x1="16.5" y1="16.5" x2="22" y2="22" />
+                <line x1="11" y1="8" x2="11" y2="14" />
+                <line x1="8" y1="11" x2="14" y2="11" />
+              </svg></div>
+          </div>
+        </div>
+
+        <div class="img-tile"
+          onclick="openImg('https://res.cloudinary.com/ddag6l8pj/image/upload/q_auto/f_auto/v1778584023/Screenshot_2026-05-12_130119_la24kv.png')">
+          <img
+            src="https://res.cloudinary.com/ddag6l8pj/image/upload/q_auto/f_auto/v1778584023/Screenshot_2026-05-12_130119_la24kv.png"
+            alt="AI Visual">
+          <div class="img-tile-ov">
+            <div class="img-zoom"><svg viewBox="0 0 24 24">
+                <circle cx="11" cy="11" r="7" />
+                <line x1="16.5" y1="16.5" x2="22" y2="22" />
+                <line x1="11" y1="8" x2="11" y2="14" />
+                <line x1="8" y1="11" x2="14" y2="11" />
+              </svg></div>
+          </div>
+        </div>
+
+        <div class="img-tile"
+          onclick="openImg('https://res.cloudinary.com/ddag6l8pj/image/upload/q_auto/f_auto/v1778584022/Screenshot_2026-05-12_130143_v9fmsw.png')">
+          <img
+            src="https://res.cloudinary.com/ddag6l8pj/image/upload/q_auto/f_auto/v1778584022/Screenshot_2026-05-12_130143_v9fmsw.png"
+            alt="AI Visual">
+          <div class="img-tile-ov">
+            <div class="img-zoom"><svg viewBox="0 0 24 24">
+                <circle cx="11" cy="11" r="7" />
+                <line x1="16.5" y1="16.5" x2="22" y2="22" />
+                <line x1="11" y1="8" x2="11" y2="14" />
+                <line x1="8" y1="11" x2="14" y2="11" />
+              </svg></div>
+          </div>
+        </div>
+
+        <div class="img-tile"
+          onclick="openImg('https://res.cloudinary.com/ddag6l8pj/image/upload/q_auto/f_auto/v1778584021/Screenshot_2026-05-12_130150_npanjj.png')">
+          <img
+            src="https://res.cloudinary.com/ddag6l8pj/image/upload/q_auto/f_auto/v1778584021/Screenshot_2026-05-12_130150_npanjj.png"
+            alt="AI Visual">
+          <div class="img-tile-ov">
+            <div class="img-zoom"><svg viewBox="0 0 24 24">
+                <circle cx="11" cy="11" r="7" />
+                <line x1="16.5" y1="16.5" x2="22" y2="22" />
+                <line x1="11" y1="8" x2="11" y2="14" />
+                <line x1="8" y1="11" x2="14" y2="11" />
+              </svg></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ CAPABILITIES ══ -->
+  <section id="capabilities">
+    <div class="sec-wrap">
+      <div class="s-label reveal">More Work</div>
+      <h2 class="s-title reveal">Beyond the <span class="r">Reel.</span></h2>
+      <div class="caps-grid">
+
+        <!-- AI Training -->
+        <div class="cap-card reveal">
+          <div class="cap-icon-wrap">🧑‍🏫</div>
+          <div class="cap-title">AI Training &amp;<br><em>Workshops</em></div>
+          <div class="cap-stat-row">
+            <span class="cap-stat">10+ Sessions</span>
+            <span class="cap-stat">Marketing Agency</span>
+            <span class="cap-stat">Multiple Teams</span>
+          </div>
+          <p class="cap-desc">Trained <strong>graphic designers, video editors, and marketing operations teams</strong>
+            at a creative agency on integrating AI into their day-to-day workflows. Ran weekly AI sessions covering the
+            full AI creative toolkit — from video and image generation to voice, avatars, and end-to-end workflow
+            automation. Topics included <strong>report building, animated presentations, content production</strong>,
+            and custom AI pipelines tailored to each team's specific needs.</p>
+          <div class="slide-tools">
+            <span class="slide-tool">AI Video Gen</span>
+            <span class="slide-tool">AI Image Gen</span>
+            <span class="slide-tool">Voice &amp; Avatar</span>
+            <span class="slide-tool">Workflow Automation</span>
+            <span class="slide-tool">Prompt Engineering</span>
+          </div>
+          <a href="https://docs.google.com/document/d/1G-Q_TLlMZA0Ud9zHmIqpktjsya_65hrtphiy4vTdpN0/edit?usp=sharing"
+            target="_blank" class="btn-ghost"
+            style="display:inline-flex;align-items:center;gap:.6rem;text-decoration:none;margin-top:.4rem;width:fit-content;">
+            View Curriculum ↗
+          </a>
+        </div>
+
+        <!-- Web Design -->
+        <div class="cap-card reveal">
+          <div class="cap-icon-wrap">🌐</div>
+          <div class="cap-title">Web Design &amp;<br><em>Vibe Coding</em></div>
+          <div class="cap-stat-row">
+            <span class="cap-stat">Animated &amp; 3D</span>
+            <span class="cap-stat">AI-Assisted Dev</span>
+            <span class="cap-stat">Live Deployed</span>
+          </div>
+          <div class="cap-browser">
+            <div class="cap-browser-bar">
+              <div class="cap-browser-dot" style="background:#ff5f57;"></div>
+              <div class="cap-browser-dot" style="background:#febc2e;"></div>
+              <div class="cap-browser-dot" style="background:#28c840;"></div>
+              <div class="cap-browser-url">website-bk-3jns.vercel.app</div>
+            </div>
+            <video src="https://res.cloudinary.com/ddag6l8pj/video/upload/q_auto/f_auto/v1778586810/0512_s6qweu.mp4"
+              autoplay muted loop playsinline></video>
+          </div>
+          <p class="cap-desc">Building <strong>animated, interactive 3D websites</strong> using modern web technologies
+            and AI-assisted development. From concept to live deployment — immersive digital experiences vibe-coded to
+            life.</p>
+          <a href="https://website-bk-3jns.vercel.app/" target="_blank" class="btn-red"
+            style="display:inline-flex;align-items:center;gap:.6rem;text-decoration:none;width:fit-content;">
+            View Live Site ↗
+          </a>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ ABOUT ══ -->
+  <section id="about">
+    <div class="sec-wrap">
+      <div class="s-label reveal">About</div>
+      <h2 class="s-title reveal">Who I <span class="r">am.</span></h2>
+      <div class="about-grid">
+        <div class="profile-card reveal">
+          <div class="profile-img-wrap">
+            <img
+              src="https://res.cloudinary.com/ddag6l8pj/image/upload/q_auto/f_auto/v1778574330/Man_leaning_against_car_202605121018_xbceqx.jpg"
+              alt="Badal">
+          </div>
+          <div class="profile-info">
+            <div class="profile-name">Badal Kabi</div>
+            <div class="profile-title">AI Creative Specialist</div>
+            <div class="profile-from">Germany → Bangalore, India</div>
+          </div>
+        </div>
+        <div class="reveal">
+          <div class="glass-panel">
+            <div class="about-text">
+              <p>I specialise in <strong>AI video generation, AI image production,</strong> and building the creative
+                workflows that make production both faster and more consistent.</p>
+              <p>I use all kinds of tools according to the project — like <strong>Kling, Nano Banana Pro, and
+                  Seedance</strong> for video, and <strong>Nano Banana Pro, GPT Image 2.0, and Ideogram</strong> for
+                stills. On the workflow side I build with <strong>Claude Code, Google AI Studio, and
+                  Perplexity</strong>, building Claude skills to automate creative pipelines end to end.</p>
+              <p>I care about the <strong>thinking behind the output</strong> — strategy, systems, creative direction,
+                results — not just knowing which button to press to get fancy outputs.</p>
+            </div>
+          </div>
+          <div class="tools-stack">
+            <div class="tool-row"><span class="t-ico">🎬</span>
+              <div>
+                <div class="t-name">AI Video</div>
+                <div class="t-sub">Kling 3.0 · Motion Control · Seedance 2.0</div>
+              </div>
+            </div>
+            <div class="tool-row"><span class="t-ico">🖼️</span>
+              <div>
+                <div class="t-name">AI Image</div>
+                <div class="t-sub">Nano Banana Pro 2 · GPT Image 2.0 · Qwen · Ideogram</div>
+              </div>
+            </div>
+            <div class="tool-row"><span class="t-ico">🧠</span>
+              <div>
+                <div class="t-name">AI Models</div>
+                <div class="t-sub">Claude · Gemini · Perplexity · GPT</div>
+              </div>
+            </div>
+            <div class="tool-row"><span class="t-ico">⚙️</span>
+              <div>
+                <div class="t-name">Workflows</div>
+                <div class="t-sub">Claude Skills · AI Studio · Claude Code · Google Sheets</div>
+              </div>
+            </div>
+            <div class="tool-row"><span class="t-ico">🎙️</span>
+              <div>
+                <div class="t-name">Voice & Avatar</div>
+                <div class="t-sub">ElevenLabs · HeyGen</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ CONTACT ══ -->
+  <section id="contact">
+    <div class="ct-outer">
+      <div class="ct-glass reveal">
+        <div class="ct-layout">
+          <div>
+            <div class="ct-headline">Let's<br><span class="r">Connect.</span></div>
+            <p class="ct-sub">Open to interesting conversations — projects, collaborations, or just talking AI creative.
+            </p>
+            <a href="mailto:badalkabi2001@gmail.com" class="ct-email-link">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                <polyline points="22,6 12,13 2,6" />
+              </svg>
+              badalkabi2001@gmail.com
+            </a>
+          </div>
+          <div class="ct-links">
+            <a href="https://www.linkedin.com/in/badalkabi/" target="_blank" class="c-link">
+              <div class="c-link-l"><span>💼</span><span>LinkedIn — badalkabi</span></div><span class="c-arr">↗</span>
+            </a>
+            <a href="mailto:badalkabi2001@gmail.com" class="c-link">
+              <div class="c-link-l"><span>✉️</span><span>Email me directly · Gmail</span></div><span
+                class="c-arr">↗</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <a href="#hero" class="f-logo">BADAL<em>WORKS</em></a>
+    <div class="f-copy">AI Creative Specialist · Germany · © 2026</div>
+  </footer>
+
+  <!-- IMAGE LIGHTBOX -->
+  <div id="img-modal" onclick="bgCloseImg(event)">
+    <div class="img-m-box">
+      <button class="m-close" onclick="closeImg()">✕ Close</button>
+      <img id="modal-img" src="" alt="AI Visual">
+    </div>
+  </div>
+
+  <!-- MODAL -->
+  <div id="modal" onclick="bgClose(event)">
+    <div class="m-box">
+      <button class="m-close" onclick="closeVid()">✕ Close</button>
+      <video id="mvid" controls playsinline></video>
+    </div>
+  </div>
+
+  <script>
+    /* ══ SPACE CANVAS ══ */
+    const canvas = document.getElementById('space-canvas');
+    const ctx = canvas.getContext('2d');
+    let W, H, stars = [];
+    const nebulas = [
+      { x: .12, y: .18, r: 380, c: 'rgba(180,20,0,.14)' }, { x: .82, y: .12, r: 300, c: 'rgba(120,10,0,.1)' },
+      { x: .5, y: .65, r: 260, c: 'rgba(150,15,0,.09)' }, { x: .88, y: .78, r: 200, c: 'rgba(100,8,0,.08)' },
+    ];
+    function resize() { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
+    function initStars() { stars = []; for (let i = 0; i < 250; i++)stars.push({ x: Math.random() * W, y: Math.random() * H, r: Math.random() * 1.4 + .2, speed: Math.random() * .004 + .001, phase: Math.random() * Math.PI * 2, color: ['#fff', '#ffcccc', '#ff6655', '#ffaaaa'][Math.floor(Math.random() * 4)] }); }
+    function drawSpace(t) {
+      ctx.clearRect(0, 0, W, H); ctx.fillStyle = '#060000'; ctx.fillRect(0, 0, W, H);
+      nebulas.forEach(n => { const g = ctx.createRadialGradient(n.x * W, n.y * H, 0, n.x * W, n.y * H, n.r); g.addColorStop(0, n.c); g.addColorStop(1, 'transparent'); ctx.beginPath(); ctx.arc(n.x * W, n.y * H, n.r, 0, Math.PI * 2); ctx.fillStyle = g; ctx.fill(); });
+      stars.forEach(s => { const a = .1 + .7 * (0.5 + 0.5 * Math.sin(t * s.speed * 1000 + s.phase)); ctx.globalAlpha = a; ctx.fillStyle = s.color; ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2); ctx.fill(); });
+      ctx.globalAlpha = 1;
+    }
+    resize(); initStars();
+    window.addEventListener('resize', () => { resize(); initStars(); });
+    (function loop(t) { drawSpace(t / 1000); requestAnimationFrame(loop); })();
+
+    /* ══ CURSOR ══ */
+    const curWrap = document.getElementById('cur-wrap');
+    let cx = -200, cy = -200, tx = -200, ty = -200;
+    document.addEventListener('mousemove', e => { tx = e.clientX; ty = e.clientY; });
+    (function curLoop() { cx += (tx - cx) * .14; cy += (ty - cy) * .14; curWrap.style.left = cx + 'px'; curWrap.style.top = cy + 'px'; requestAnimationFrame(curLoop); })();
+    function addHoverListeners() {
+      document.querySelectorAll('a,button,.slide-play').forEach(el => {
+        el.addEventListener('mouseenter', () => document.body.classList.add('on-link'));
+        el.addEventListener('mouseleave', () => document.body.classList.remove('on-link'));
+      });
+    }
+    addHoverListeners();
+
+    /* ══ ORBIT SCENE ══ */
+    const scene = document.getElementById('orbit-scene');
+    const allVids = [
+      'https://res.cloudinary.com/ddag6l8pj/video/upload/q_auto/f_auto/v1777755463/0209_1_tz3o7m.mp4',
+      'https://res.cloudinary.com/ddag6l8pj/video/upload/q_auto/f_auto/v1777755469/0318_4_xroisp.mp4',
+      'https://res.cloudinary.com/ddag6l8pj/video/upload/q_auto/f_auto/v1777755470/1110_3_skmmlg.mp4',
+      'https://res.cloudinary.com/ddag6l8pj/video/upload/q_auto/f_auto/v1777755473/0429_aiij4g.mp4',
+      'https://res.cloudinary.com/ddag6l8pj/video/upload/q_auto/f_auto/v1778497759/0325_2_7_gx7mzy.mp4',
+      'https://res.cloudinary.com/ddag6l8pj/video/upload/q_auto/f_auto/v1778497796/1023_1_3_sp3kvf.mp4',
+      'https://res.cloudinary.com/ddag6l8pj/video/upload/q_auto/f_auto/v1778498191/0310_1_2_svexrj.mp4',
+      'https://res.cloudinary.com/ddag6l8pj/video/upload/q_auto/f_auto/v1778498210/0313_1_oqfvke.mp4',
+    ];
+    const rings = [
+      { tilt: -28, radius: 530, count: 4, w: 145, h: 248, dur: 30, dir: 1 },
+      { tilt: 18, radius: 370, count: 3, w: 115, h: 195, dur: 22, dir: -1 },
+      { tilt: -52, radius: 265, count: 3, w: 90, h: 155, dur: 16, dir: 1 },
+    ];
+    let vidIdx = 0;
+    rings.forEach(cfg => {
+      const ring = document.createElement('div');
+      ring.className = 'orbit-ring';
+      ring.style.cssText = `--tilt:${cfg.tilt}deg;--dur:${cfg.dur}s;animation-direction:${cfg.dir === 1 ? 'normal' : 'reverse'};`;
+      for (let i = 0; i < cfg.count; i++) {
+        const angle = (i / cfg.count) * Math.PI * 2;
+        const x = Math.cos(angle) * cfg.radius, z = Math.sin(angle) * cfg.radius;
+        const card = document.createElement('div');
+        card.className = 'orbit-card';
+        card.style.cssText = `left:0;top:0;transform:translateX(-50%) translateY(-50%) translate3d(${x}px,0,${z}px);`;
+        const inner = document.createElement('div');
+        inner.className = 'o-inner'; inner.style.cssText = `width:${cfg.w}px;height:${cfg.h}px;`;
+        const vid = document.createElement('video');
+        vid.src = allVids[vidIdx % allVids.length] + '#t=0.5'; vidIdx++;
+        vid.preload = 'metadata'; vid.muted = true; vid.loop = true; vid.playsInline = true;
+        vid.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block;';
+        vid.addEventListener('canplay', () => vid.play().catch(() => { }));
+        inner.appendChild(vid); card.appendChild(inner); ring.appendChild(card);
+      }
+      scene.appendChild(ring);
+    });
+
+    /* ══ SCROLL STORY ══ */
+    const storyOuter = document.getElementById('story-outer');
+    const storySides = document.getElementById('story-progress-wrap');
+    const storyLabel = document.getElementById('story-label');
+    const scrollNudge = document.getElementById('scroll-nudge');
+    const slides = document.querySelectorAll('.slide');
+    const dots = document.querySelectorAll('.prog-dot');
+    const N = slides.length; // 8
+    let currentSlide = -1;
+    let inStory = false;
+
+    // Slide videos — play when active
+    const slideVids = [];
+    slides.forEach(s => { const v = s.querySelector('video'); slideVids.push(v); });
+
+    function setSlide(idx) {
+      if (idx === currentSlide) return;
+      // deactivate old
+      if (currentSlide >= 0 && currentSlide < N) {
+        slides[currentSlide].classList.remove('active');
+        slides[currentSlide].classList.add('past');
+        slideVids[currentSlide] && slideVids[currentSlide].pause();
+      }
+      currentSlide = idx;
+      // clear past on future slides
+      slides.forEach((s, i) => {
+        if (i > idx) s.classList.remove('past', 'active');
+        else if (i < idx) s.classList.add('past');
+      });
+      if (idx >= 0 && idx < N) {
+        slides[idx].classList.remove('past');
+        slides[idx].classList.add('active');
+        // play slide video silently
+        const v = slideVids[idx];
+        if (v) { v.currentTime = 0; v.play().catch(() => { }); }
+      }
+      // update dots
+      dots.forEach((d, i) => {
+        d.classList.remove('active', 'done');
+        if (i === idx) d.classList.add('active');
+        else if (i < idx) d.classList.add('done');
+      });
+    }
+
+    function onScroll() {
+      const rect = storyOuter.getBoundingClientRect();
+      const scrolled = -rect.top;
+      const total = rect.height - window.innerHeight;
+      const progress = Math.max(0, Math.min(1, scrolled / total));
+
+      // Is user inside the story section?
+      const entering = rect.top <= 0 && rect.bottom >= window.innerHeight;
+
+      if (entering !== inStory) {
+        inStory = entering;
+        scene.classList.toggle('story-mode', inStory);
+        storySides.classList.toggle('visible', inStory);
+        storyLabel.classList.toggle('visible', inStory);
+        scrollNudge.classList.toggle('visible', inStory && currentSlide < N - 1);
+      }
+
+      if (!inStory) {
+        // Outside story: clear all slides
+        if (currentSlide !== -1) {
+          slides.forEach(s => s.classList.remove('active', 'past'));
+          slideVids.forEach(v => v && v.pause());
+          currentSlide = -1;
+          dots.forEach(d => d.classList.remove('active', 'done'));
+        }
+        return;
+      }
+
+      // Map progress to slide index
+      // Each slide gets 1/N of the total scroll range
+      const rawIdx = Math.floor(progress * N);
+      const idx = Math.max(0, Math.min(N - 1, rawIdx));
+      setSlide(idx);
+
+      // Show scroll nudge only if not at last slide
+      scrollNudge.classList.toggle('visible', idx < N - 1);
+    }
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+
+    /* Dot clicks — scroll to that slide */
+    dots.forEach((dot, i) => {
+      dot.addEventListener('click', () => {
+        const rect = storyOuter.getBoundingClientRect();
+        const total = storyOuter.offsetHeight - window.innerHeight;
+        const targetProgress = (i + .5) / N;
+        const targetScroll = storyOuter.offsetTop + targetProgress * total;
+        window.scrollTo({ top: targetScroll, behavior: 'smooth' });
+      });
+    });
+
+    /* ══ SCROLL REVEAL (about, contact) ══ */
+    const ro = new IntersectionObserver(entries => { entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('in'); }); }, { threshold: .08 });
+    document.querySelectorAll('.reveal').forEach(el => ro.observe(el));
+
+    /* ══ MODAL ══ */
+    function openVid(src) {
+      const v = document.getElementById('mvid');
+      v.src = src; v.load(); v.play().catch(() => { });
+      document.getElementById('modal').classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeVid() {
+      const v = document.getElementById('mvid');
+      v.pause(); v.src = '';
+      document.getElementById('modal').classList.remove('open');
+      document.body.style.overflow = '';
+    }
+    function bgClose(e) { if (e.target.id === 'modal') closeVid(); }
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeVid(); closeImg(); } });
+
+    /* ══ IMAGE LIGHTBOX ══ */
+    function openImg(src) {
+      document.getElementById('modal-img').src = src;
+      document.getElementById('img-modal').classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeImg() {
+      document.getElementById('img-modal').classList.remove('open');
+      document.getElementById('modal-img').src = '';
+      document.body.style.overflow = '';
+    }
+    function bgCloseImg(e) { if (e.target.id === 'img-modal') closeImg(); }
+
+    /* ══ ANCHOR LINK FIX (overflow-x:hidden breaks native scroll) ══ */
+    document.querySelectorAll('a[href^="#"]').forEach(a => {
+      a.addEventListener('click', e => {
+        const id = a.getAttribute('href').slice(1);
+        if (!id) return;
+        const target = document.getElementById(id);
+        if (target) {
+          e.preventDefault();
+          const top = target.getBoundingClientRect().top + window.pageYOffset - 80;
+          window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+        }
+      });
+    });
+  </script>
+</body>
+
+</html>
