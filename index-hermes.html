@@ -6,94 +6,168 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Badal Kabi — AI Creative</title>
   <link
-    href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500&family=Space+Mono:wght@400;700&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&display=swap"
     rel="stylesheet">
   <style>
     :root {
-      --bg: #F9F6F1;
-      --bg2: #F0EDE8;
-      --text: #1C1916;
-      --muted: rgba(28, 25, 22, 0.5);
-      --dim: rgba(28, 25, 22, 0.07);
-      --border: rgba(28, 25, 22, 0.13);
+      --blue: #0500FF;
+      --blue-dark: #0300CC;
+      --bg: #0500FF;
+      --text: #FFFFFF;
+      --muted: rgba(255, 255, 255, 0.55);
+      --border: rgba(255, 255, 255, 0.18);
+      --dim: rgba(255, 255, 255, 0.08);
+      --card-bg: rgba(255, 255, 255, 0.06);
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html { scroll-behavior: smooth; }
-    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); overflow-x: hidden; }
+
+    body {
+      font-family: 'Space Mono', monospace;
+      background: var(--blue);
+      color: var(--text);
+      overflow-x: hidden;
+      /* Blueprint grid */
+      background-image:
+        linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
+      background-size: 48px 48px;
+    }
 
     /* ══ NAV ══ */
     nav {
       position: fixed; top: 0; left: 0; right: 0; z-index: 600;
       display: flex; align-items: center; justify-content: space-between;
       padding: 1.4rem 3rem;
-      background: rgba(249, 246, 241, 0.92);
-      backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+      background: rgba(5, 0, 255, 0.85);
+      backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
       border-bottom: 1px solid var(--border);
     }
-    .logo { font-family: 'DM Serif Display', serif; font-size: 1.05rem; color: var(--text); text-decoration: none; letter-spacing: 0.02em; }
+    .logo {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.4rem; color: var(--text); text-decoration: none;
+      letter-spacing: 0.08em;
+    }
     .nav-links { display: flex; gap: 2.5rem; list-style: none; }
-    .nav-links a { font-family: 'Space Mono', monospace; font-size: 0.57rem; color: var(--muted); text-decoration: none; letter-spacing: 0.14em; text-transform: uppercase; transition: color 0.2s; }
+    .nav-links a {
+      font-family: 'Space Mono', monospace; font-size: 0.55rem;
+      color: var(--muted); text-decoration: none;
+      letter-spacing: 0.18em; text-transform: uppercase; transition: color 0.2s;
+    }
     .nav-links a:hover { color: var(--text); }
-    .nav-cta { font-family: 'Space Mono', monospace; font-size: 0.57rem; letter-spacing: 0.1em; color: var(--text); border: 1px solid var(--text); padding: 0.48rem 1.2rem; text-decoration: none; text-transform: uppercase; transition: background 0.2s, color 0.2s; }
-    .nav-cta:hover { background: var(--text); color: var(--bg); }
+    .nav-cta {
+      font-family: 'Space Mono', monospace; font-size: 0.55rem;
+      letter-spacing: 0.12em; color: var(--text);
+      border: 1px solid var(--border); padding: 0.48rem 1.2rem;
+      text-decoration: none; text-transform: uppercase;
+      transition: background 0.2s, border-color 0.2s;
+    }
+    .nav-cta:hover { background: rgba(255,255,255,0.12); border-color: rgba(255,255,255,0.5); }
 
     /* ══ HERO ══ */
     #hero {
-      position: relative; min-height: 100vh;
-      display: flex; flex-direction: column; justify-content: flex-end;
-      padding: 0 3rem 5rem; overflow: hidden;
+      min-height: 100vh; display: flex; flex-direction: column;
+      justify-content: flex-end; padding: 0 3rem 5rem;
+      position: relative; overflow: hidden;
     }
-    .hero-img-side {
-      position: absolute; top: 0; right: 0; width: 48%; height: 100%;
-      overflow: hidden; z-index: 0;
+    .hero-bg-grid {
+      position: absolute; inset: 0; z-index: 0; pointer-events: none;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.07) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.07) 1px, transparent 1px);
+      background-size: 80px 80px;
     }
-    .hero-img-side img { width: 100%; height: 100%; object-fit: cover; display: block; filter: contrast(1.02) saturate(0.92); }
-    .hero-img-side::before {
-      content: ''; position: absolute; top: 0; left: 0; width: 60%; height: 100%;
-      background: linear-gradient(to right, var(--bg), transparent); z-index: 1; pointer-events: none;
-    }
-    .hero-content { position: relative; z-index: 2; }
     .hero-eyebrow {
-      font-family: 'Space Mono', monospace; font-size: 0.58rem; letter-spacing: 0.2em;
-      color: var(--muted); text-transform: uppercase; margin-bottom: 1.8rem;
+      font-family: 'Space Mono', monospace; font-size: 0.6rem;
+      letter-spacing: 0.28em; color: var(--muted); text-transform: uppercase;
+      margin-bottom: 2rem; position: relative; z-index: 2;
       opacity: 0; animation: fadeUp 0.8s 0.4s forwards;
       display: flex; align-items: center; gap: 0.7rem;
     }
-    .hero-eyebrow::before { content: ''; width: 28px; height: 1px; background: var(--muted); flex-shrink: 0; }
-    .hero-headline {
-      font-family: 'DM Serif Display', serif;
-      font-size: clamp(4.5rem, 10vw, 9.5rem);
-      line-height: 0.92; letter-spacing: -0.015em; margin-bottom: 3rem;
-      opacity: 0; animation: fadeUp 0.8s 0.55s forwards; max-width: 55vw;
+    .hero-eyebrow::before {
+      content: ''; width: 28px; height: 1px; background: var(--muted); flex-shrink: 0;
     }
-    .hero-headline em { font-style: italic; color: var(--muted); }
-    .hero-bottom { display: flex; align-items: flex-end; gap: 4rem; opacity: 0; animation: fadeUp 0.8s 0.75s forwards; }
-    .hero-sub { font-size: 0.9rem; color: var(--muted); line-height: 1.9; max-width: 340px; font-weight: 300; }
-    .hero-sub strong { color: var(--text); font-weight: 500; }
+    .hero-headline {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(6rem, 14vw, 14rem);
+      line-height: 0.88; letter-spacing: 0.02em;
+      color: var(--text); position: relative; z-index: 2;
+      opacity: 0; animation: fadeUp 0.8s 0.55s forwards;
+    }
+    .hero-headline .dim { color: var(--muted); }
+    .hero-bottom {
+      display: flex; align-items: flex-end; gap: 5rem;
+      margin-top: 3rem; position: relative; z-index: 2;
+      opacity: 0; animation: fadeUp 0.8s 0.75s forwards;
+    }
+    .hero-sub {
+      font-size: 0.72rem; color: var(--muted); line-height: 2; max-width: 360px;
+    }
+    .hero-sub strong { color: var(--text); }
     .hero-btns { display: flex; gap: 0.8rem; flex-shrink: 0; }
-    .btn-primary { font-family: 'Space Mono', monospace; font-size: 0.58rem; letter-spacing: 0.12em; text-transform: uppercase; background: var(--text); color: var(--bg); padding: 0.88rem 1.8rem; text-decoration: none; transition: opacity 0.2s; white-space: nowrap; }
-    .btn-primary:hover { opacity: 0.75; }
-    .btn-outline { font-family: 'Space Mono', monospace; font-size: 0.58rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); border: 1px solid var(--border); padding: 0.88rem 1.6rem; text-decoration: none; transition: color 0.2s, border-color 0.2s; white-space: nowrap; }
-    .btn-outline:hover { color: var(--text); border-color: var(--text); }
-    .hero-scroll { position: absolute; bottom: 2.5rem; right: 3rem; display: flex; flex-direction: column; align-items: center; gap: 0.6rem; opacity: 0; animation: fadeIn 1s 1.6s forwards; }
-    .h-scroll-line { width: 1px; height: 44px; background: linear-gradient(to bottom, var(--text), transparent); animation: pulse-line 2s ease-in-out infinite; }
-    @keyframes pulse-line { 0%, 100% { opacity: 0.25; } 50% { opacity: 0.8; } }
-    .h-scroll-text { font-family: 'Space Mono', monospace; font-size: 0.44rem; letter-spacing: 0.18em; color: var(--muted); text-transform: uppercase; writing-mode: vertical-rl; }
+    .btn-primary {
+      font-family: 'Space Mono', monospace; font-size: 0.58rem;
+      letter-spacing: 0.14em; text-transform: uppercase;
+      background: var(--text); color: var(--blue);
+      padding: 0.88rem 1.8rem; text-decoration: none;
+      transition: opacity 0.2s; white-space: nowrap; font-weight: 700;
+    }
+    .btn-primary:hover { opacity: 0.82; }
+    .btn-outline {
+      font-family: 'Space Mono', monospace; font-size: 0.58rem;
+      letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--muted); border: 1px solid var(--border);
+      padding: 0.88rem 1.6rem; text-decoration: none;
+      transition: color 0.2s, border-color 0.2s; white-space: nowrap;
+    }
+    .btn-outline:hover { color: var(--text); border-color: rgba(255,255,255,0.5); }
+    .hero-scroll {
+      position: absolute; bottom: 2.5rem; right: 3rem;
+      display: flex; flex-direction: column; align-items: center; gap: 0.6rem;
+      opacity: 0; animation: fadeIn 1s 1.6s forwards;
+    }
+    .h-scroll-line {
+      width: 1px; height: 44px;
+      background: linear-gradient(to bottom, var(--text), transparent);
+      animation: pulse-line 2s ease-in-out infinite;
+    }
+    @keyframes pulse-line { 0%, 100% { opacity: 0.2; } 50% { opacity: 0.7; } }
+    .h-scroll-text {
+      font-family: 'Space Mono', monospace; font-size: 0.42rem;
+      letter-spacing: 0.18em; color: var(--muted); text-transform: uppercase;
+      writing-mode: vertical-rl;
+    }
 
     /* ══ TICKER ══ */
-    .ticker-wrap { position: relative; z-index: 2; overflow: hidden; padding: 0.9rem 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+    .ticker-wrap {
+      position: relative; z-index: 2; overflow: hidden;
+      padding: 0.9rem 0; border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
     .t-track { display: flex; animation: tick 38s linear infinite; white-space: nowrap; }
-    .t-item { font-family: 'Space Mono', monospace; font-size: 0.56rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); padding: 0 2.5rem; flex-shrink: 0; }
+    .t-item {
+      font-family: 'Space Mono', monospace; font-size: 0.56rem;
+      letter-spacing: 0.16em; text-transform: uppercase;
+      color: var(--muted); padding: 0 2.5rem; flex-shrink: 0;
+    }
     .t-sep { opacity: 0.3; }
     @keyframes tick { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 
     /* ══ SECTIONS ══ */
     .sec-wrap { position: relative; z-index: 2; max-width: 1200px; margin: 0 auto; padding: 8rem 3rem; }
-    .s-label { font-family: 'Space Mono', monospace; font-size: 0.54rem; letter-spacing: 0.2em; color: var(--muted); text-transform: uppercase; margin-bottom: 0.85rem; display: flex; align-items: center; gap: 0.6rem; }
+    .s-label {
+      font-family: 'Space Mono', monospace; font-size: 0.54rem;
+      letter-spacing: 0.22em; color: var(--muted); text-transform: uppercase;
+      margin-bottom: 0.85rem; display: flex; align-items: center; gap: 0.6rem;
+    }
     .s-label::before { content: ''; width: 22px; height: 1px; background: var(--muted); flex-shrink: 0; }
-    .s-title { font-family: 'DM Serif Display', serif; font-size: clamp(2.8rem, 5vw, 4.8rem); line-height: 0.96; margin-bottom: 3.5rem; }
-    .s-title em { font-style: italic; color: var(--muted); }
+    .s-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(4rem, 7vw, 8rem);
+      line-height: 0.92; letter-spacing: 0.04em; margin-bottom: 3.5rem;
+    }
+    .s-title .dim { color: var(--muted); }
     .reveal { opacity: 0; transform: translateY(18px); transition: opacity 0.7s ease, transform 0.7s ease; }
     .reveal.in { opacity: 1; transform: translateY(0); }
 
@@ -109,19 +183,20 @@
       overflow: hidden;
       cursor: pointer;
       transition: transform 0.3s ease, box-shadow 0.3s ease;
-      background: var(--bg2);
+      background: var(--card-bg);
     }
 
     .work-card:hover {
       transform: translateY(-5px);
-      box-shadow: 0 16px 48px rgba(28, 25, 22, 0.1);
+      box-shadow: 0 16px 48px rgba(0, 0, 0, 0.4);
+      border-color: rgba(255,255,255,0.4);
     }
 
     .work-card-video {
       position: relative;
       aspect-ratio: 9 / 16;
       overflow: hidden;
-      background: #e8e4df;
+      background: rgba(0,0,0,0.3);
     }
 
     .work-card-video.landscape {
@@ -129,44 +204,24 @@
     }
 
     .work-card-video video {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: block;
+      width: 100%; height: 100%; object-fit: cover; display: block;
       transition: filter 0.3s;
     }
 
-    .work-card:hover .work-card-video video {
-      filter: brightness(0.75);
-    }
+    .work-card:hover .work-card-video video { filter: brightness(0.65); }
 
     .work-card-play {
-      position: absolute;
-      top: 50%;
-      left: 50%;
+      position: absolute; top: 50%; left: 50%;
       transform: translate(-50%, -50%);
-      width: 52px;
-      height: 52px;
-      background: rgba(249, 246, 241, 0.92);
-      border: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      opacity: 0;
-      transition: opacity 0.2s, background 0.2s;
-      pointer-events: none;
+      width: 52px; height: 52px;
+      background: rgba(5,0,255,0.8); border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; transition: opacity 0.2s; pointer-events: none;
     }
 
-    .work-card:hover .work-card-play {
-      opacity: 1;
-    }
+    .work-card:hover .work-card-play { opacity: 1; }
 
-    .work-card-play svg {
-      width: 14px;
-      height: 14px;
-      fill: var(--text);
-      margin-left: 2px;
-    }
+    .work-card-play svg { width: 14px; height: 14px; fill: var(--text); margin-left: 2px; }
 
     .work-card-info {
       padding: 1.2rem 1.4rem 1.5rem;
@@ -174,81 +229,61 @@
     }
 
     .work-card-meta {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+      display: flex; align-items: center; justify-content: space-between;
       margin-bottom: 0.7rem;
     }
 
     .work-card-count {
-      font-family: 'Space Mono', monospace;
-      font-size: 0.48rem;
-      letter-spacing: 0.18em;
-      color: var(--muted);
-      text-transform: uppercase;
+      font-family: 'Space Mono', monospace; font-size: 0.46rem;
+      letter-spacing: 0.18em; color: var(--muted); text-transform: uppercase;
     }
 
     .work-card-tag {
-      font-family: 'Space Mono', monospace;
-      font-size: 0.46rem;
-      letter-spacing: 0.1em;
-      color: var(--muted);
-      text-transform: uppercase;
+      font-family: 'Space Mono', monospace; font-size: 0.44rem;
+      letter-spacing: 0.1em; color: var(--muted); text-transform: uppercase;
     }
 
     .work-card-title {
-      font-family: 'DM Serif Display', serif;
-      font-size: 1.25rem;
-      line-height: 1.1;
-      color: var(--text);
-      margin-bottom: 0.6rem;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.6rem; line-height: 0.95; letter-spacing: 0.04em;
+      color: var(--text); margin-bottom: 0.7rem;
     }
 
-    .work-card-title em {
-      font-style: italic;
-      color: var(--muted);
-    }
+    .work-card-title .dim { color: var(--muted); }
 
     .work-card-body {
-      font-size: 0.78rem;
-      color: var(--muted);
-      line-height: 1.75;
-      font-weight: 300;
+      font-size: 0.7rem; color: var(--muted); line-height: 1.85;
       margin-bottom: 0.8rem;
-      display: -webkit-box;
-      -webkit-line-clamp: 3;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
+      display: -webkit-box; -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical; overflow: hidden;
     }
 
-    .work-card-body strong { color: var(--text); font-weight: 500; }
+    .work-card-body strong { color: var(--text); }
 
-    .work-card-tools {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.3rem;
-    }
+    .work-card-tools { display: flex; flex-wrap: wrap; gap: 0.3rem; }
 
     .work-card-tool {
-      font-family: 'Space Mono', monospace;
-      font-size: 0.44rem;
-      letter-spacing: 0.08em;
-      color: var(--muted);
-      border: 1px solid var(--border);
-      padding: 0.18rem 0.55rem;
+      font-family: 'Space Mono', monospace; font-size: 0.42rem;
+      letter-spacing: 0.08em; color: var(--muted);
+      border: 1px solid var(--border); padding: 0.18rem 0.55rem;
     }
 
     /* ══ AI VISUALS ══ */
     .img-grid { columns: 3; column-gap: 0.7rem; }
-    .img-tile { break-inside: avoid; margin-bottom: 0.7rem; position: relative; overflow: hidden; border: 1px solid var(--border); cursor: pointer; transition: transform 0.3s, box-shadow 0.3s; }
-    .img-tile:hover { transform: scale(1.02); box-shadow: 0 8px 32px rgba(28, 25, 22, 0.1); }
+    .img-tile {
+      break-inside: avoid; margin-bottom: 0.7rem;
+      position: relative; overflow: hidden;
+      border: 1px solid var(--border); cursor: pointer;
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+    .img-tile:hover { transform: scale(1.02); box-shadow: 0 8px 32px rgba(0,0,0,0.4); border-color: rgba(255,255,255,0.4); }
     .img-tile img { width: 100%; height: auto; display: block; transition: filter 0.3s; }
-    .img-tile:hover img { filter: brightness(0.65); }
+    .img-tile:hover img { filter: brightness(0.55); }
     .img-tile-ov { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s; }
     .img-tile:hover .img-tile-ov { opacity: 1; }
-    .img-zoom { width: 42px; height: 42px; background: rgba(249, 246, 241, 0.9); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; }
+    .img-zoom { width: 42px; height: 42px; background: rgba(5,0,255,0.9); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; }
     .img-zoom svg { width: 16px; height: 16px; stroke: var(--text); fill: none; stroke-width: 2; }
-    #img-modal { display: none; position: fixed; inset: 0; z-index: 9001; background: rgba(249,246,241,0.97); backdrop-filter: blur(14px); align-items: center; justify-content: center; padding: 2rem; }
+    #img-modal { display: none; position: fixed; inset: 0; z-index: 9001; background: rgba(5,0,255,0.97); backdrop-filter: blur(14px); align-items: center; justify-content: center; padding: 2rem; }
     #img-modal.open { display: flex; }
     .img-m-box { position: relative; max-width: 90vw; max-height: 90vh; }
     .img-m-box .m-close { position: absolute; top: -0.6rem; right: -0.6rem; z-index: 2; }
@@ -259,87 +294,104 @@
     .yt-channel-card { display: flex; align-items: center; gap: 1rem; padding: 1.2rem 0; border-bottom: 1px solid var(--border); margin-bottom: 2rem; }
     .yt-logo-wrap { width: 52px; height: 52px; border-radius: 50%; overflow: hidden; border: 1px solid var(--border); flex-shrink: 0; }
     .yt-logo-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; }
-    .yt-channel-name { font-family: 'DM Serif Display', serif; font-size: 1.1rem; color: var(--text); }
+    .yt-channel-name { font-family: 'Bebas Neue', sans-serif; font-size: 1.5rem; color: var(--text); letter-spacing: 0.06em; }
     .yt-channel-sub { font-family: 'Space Mono', monospace; font-size: 0.5rem; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; margin-top: 0.25rem; }
     .yt-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; margin-bottom: 2rem; }
-    .yt-stat { border: 1px solid var(--border); padding: 1.2rem 0.8rem; text-align: center; }
-    .yt-stat-num { font-family: 'DM Serif Display', serif; font-size: 1.8rem; color: var(--text); line-height: 1; }
+    .yt-stat { border: 1px solid var(--border); padding: 1.2rem 0.8rem; text-align: center; background: var(--card-bg); }
+    .yt-stat-num { font-family: 'Bebas Neue', sans-serif; font-size: 2.2rem; color: var(--text); line-height: 1; letter-spacing: 0.04em; }
     .yt-stat-label { font-family: 'Space Mono', monospace; font-size: 0.44rem; letter-spacing: 0.1em; color: var(--muted); text-transform: uppercase; margin-top: 0.5rem; line-height: 1.4; }
-    .yt-desc { font-size: 0.88rem; color: var(--muted); line-height: 1.9; font-weight: 300; margin-bottom: 1.8rem; }
-    .yt-desc strong { color: var(--text); font-weight: 500; }
+    .yt-desc { font-size: 0.72rem; color: var(--muted); line-height: 2; margin-bottom: 1.8rem; }
+    .yt-desc strong { color: var(--text); }
     .yt-screenshots { display: flex; flex-direction: column; gap: 1rem; }
     .yt-shot-card { border: 1px solid var(--border); overflow: hidden; }
     .yt-shot-card img { width: 100%; height: auto; display: block; }
 
     /* ══ CAPABILITIES ══ */
     .caps-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; align-items: start; }
-    .cap-card { border: 1px solid var(--border); padding: 2.5rem; display: flex; flex-direction: column; gap: 1.2rem; }
+    .cap-card { border: 1px solid var(--border); padding: 2.5rem; display: flex; flex-direction: column; gap: 1.2rem; background: var(--card-bg); }
     .cap-icon-wrap { width: 46px; height: 46px; border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
-    .cap-title { font-family: 'DM Serif Display', serif; font-size: 1.55rem; line-height: 1.1; color: var(--text); }
-    .cap-title em { font-style: italic; color: var(--muted); }
-    .cap-desc { font-size: 0.88rem; color: var(--muted); line-height: 1.9; font-weight: 300; }
-    .cap-desc strong { color: var(--text); font-weight: 500; }
+    .cap-title { font-family: 'Bebas Neue', sans-serif; font-size: 2rem; line-height: 0.95; letter-spacing: 0.04em; color: var(--text); }
+    .cap-title .dim { color: var(--muted); }
+    .cap-desc { font-size: 0.72rem; color: var(--muted); line-height: 2; }
+    .cap-desc strong { color: var(--text); }
     .cap-stat-row { display: flex; gap: 0.4rem; flex-wrap: wrap; }
-    .cap-stat { font-family: 'Space Mono', monospace; font-size: 0.48rem; letter-spacing: 0.1em; color: var(--muted); border: 1px solid var(--border); padding: 0.28rem 0.65rem; text-transform: uppercase; }
+    .cap-stat { font-family: 'Space Mono', monospace; font-size: 0.46rem; letter-spacing: 0.1em; color: var(--muted); border: 1px solid var(--border); padding: 0.28rem 0.65rem; text-transform: uppercase; }
     .cap-browser { border: 1px solid var(--border); overflow: hidden; }
-    .cap-browser-bar { background: var(--bg2); padding: 0.5rem 0.85rem; display: flex; align-items: center; gap: 0.4rem; border-bottom: 1px solid var(--border); }
+    .cap-browser-bar { background: var(--dim); padding: 0.5rem 0.85rem; display: flex; align-items: center; gap: 0.4rem; border-bottom: 1px solid var(--border); }
     .cap-browser-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
     .cap-browser-url { flex: 1; font-family: 'Space Mono', monospace; font-size: 0.44rem; color: var(--muted); margin-left: 0.4rem; letter-spacing: 0.04em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .cap-browser video { width: 100%; display: block; max-height: 240px; object-fit: cover; }
     .slide-tools { display: flex; flex-wrap: wrap; gap: 0.35rem; }
-    .slide-tool { font-family: 'Space Mono', monospace; font-size: 0.48rem; letter-spacing: 0.08em; color: var(--muted); border: 1px solid var(--border); padding: 0.2rem 0.65rem; }
+    .slide-tool { font-family: 'Space Mono', monospace; font-size: 0.46rem; letter-spacing: 0.08em; color: var(--muted); border: 1px solid var(--border); padding: 0.2rem 0.65rem; }
 
     /* ══ ABOUT ══ */
     .about-grid { display: grid; grid-template-columns: 1fr 1.4fr; gap: 5rem; align-items: start; }
     .profile-card { position: relative; overflow: hidden; border: 1px solid var(--border); }
     .profile-img-wrap { position: relative; overflow: hidden; }
-    .profile-img-wrap img { width: 100%; height: auto; display: block; filter: contrast(1.02) saturate(0.92); }
-    .profile-img-wrap::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 60px; background: linear-gradient(to top, var(--bg2), transparent); }
+    .profile-img-wrap img { width: 100%; height: auto; display: block; filter: saturate(0.7) contrast(1.1); }
+    .profile-img-wrap::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 60px; background: linear-gradient(to top, var(--blue), transparent); }
     .profile-info { padding: 1.4rem 1.8rem 1.8rem; border-top: 1px solid var(--border); }
-    .profile-name { font-family: 'DM Serif Display', serif; font-size: 1.4rem; margin-bottom: 0.3rem; color: var(--text); }
-    .profile-title-tag { font-family: 'Space Mono', monospace; font-size: 0.54rem; letter-spacing: 0.14em; color: var(--muted); text-transform: uppercase; }
+    .profile-name { font-family: 'Bebas Neue', sans-serif; font-size: 2rem; letter-spacing: 0.06em; margin-bottom: 0.3rem; color: var(--text); }
+    .profile-title-tag { font-family: 'Space Mono', monospace; font-size: 0.52rem; letter-spacing: 0.14em; color: var(--muted); text-transform: uppercase; }
     .profile-from { font-family: 'Space Mono', monospace; font-size: 0.5rem; color: var(--muted); margin-top: 0.3rem; letter-spacing: 0.06em; }
     .about-text { margin-bottom: 2.5rem; }
-    .about-text p { font-size: 0.95rem; line-height: 1.95; color: var(--muted); margin-bottom: 1.2rem; font-weight: 300; }
+    .about-text p { font-size: 0.72rem; line-height: 2; color: var(--muted); margin-bottom: 1.2rem; }
     .about-text p:last-child { margin-bottom: 0; }
-    .about-text strong { color: var(--text); font-weight: 500; }
+    .about-text strong { color: var(--text); }
     .tools-stack { display: flex; flex-direction: column; gap: 0; }
     .tool-row { display: flex; align-items: center; gap: 1rem; padding: 0.75rem 0; border-bottom: 1px solid var(--dim); transition: border-color 0.2s; }
     .tool-row:first-child { border-top: 1px solid var(--dim); }
     .tool-row:hover { border-color: var(--border); }
     .t-ico { width: 6px; height: 6px; background: var(--text); border-radius: 50%; flex-shrink: 0; opacity: 0.35; }
-    .t-name { font-size: 0.78rem; font-weight: 500; color: var(--text); }
-    .t-sub { font-family: 'Space Mono', monospace; font-size: 0.5rem; color: var(--muted); margin-top: 0.1rem; letter-spacing: 0.04em; }
+    .t-name { font-family: 'Space Mono', monospace; font-size: 0.65rem; font-weight: 700; color: var(--text); letter-spacing: 0.08em; }
+    .t-sub { font-family: 'Space Mono', monospace; font-size: 0.48rem; color: var(--muted); margin-top: 0.1rem; letter-spacing: 0.04em; }
 
     /* ══ CONTACT ══ */
     .ct-outer { position: relative; z-index: 2; max-width: 1200px; margin: 0 auto; padding: 2rem 3rem 8rem; }
-    .ct-glass { border: 1px solid var(--border); padding: 5rem; position: relative; }
+    .ct-glass { border: 1px solid var(--border); padding: 5rem; position: relative; background: var(--card-bg); }
     .ct-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 6rem; align-items: center; }
-    .ct-headline { font-family: 'DM Serif Display', serif; font-size: clamp(3rem, 5vw, 4.5rem); line-height: 0.96; margin-bottom: 1.5rem; }
-    .ct-headline em { font-style: italic; color: var(--muted); }
-    .ct-sub { font-size: 0.88rem; color: var(--muted); line-height: 1.8; font-weight: 300; margin-bottom: 2rem; }
-    .ct-email-link { display: inline-flex; align-items: center; gap: 0.6rem; font-family: 'Space Mono', monospace; font-size: 0.7rem; color: var(--text); text-decoration: none; border-bottom: 1px solid var(--border); padding-bottom: 3px; transition: opacity 0.2s, border-color 0.2s; }
-    .ct-email-link:hover { opacity: 0.6; border-color: var(--text); }
+    .ct-headline { font-family: 'Bebas Neue', sans-serif; font-size: clamp(4rem, 7vw, 7rem); line-height: 0.88; letter-spacing: 0.04em; margin-bottom: 1.5rem; }
+    .ct-headline .dim { color: var(--muted); }
+    .ct-sub { font-size: 0.72rem; color: var(--muted); line-height: 2; margin-bottom: 2rem; }
+    .ct-email-link { display: inline-flex; align-items: center; gap: 0.6rem; font-family: 'Space Mono', monospace; font-size: 0.7rem; color: var(--text); text-decoration: none; border-bottom: 1px solid var(--border); padding-bottom: 3px; transition: opacity 0.2s; }
+    .ct-email-link:hover { opacity: 0.6; }
     .ct-links { display: flex; flex-direction: column; }
-    .c-link { display: flex; align-items: center; justify-content: space-between; padding: 1rem 0; border-bottom: 1px solid var(--border); text-decoration: none; color: var(--muted); font-size: 0.82rem; transition: color 0.2s; }
+    .c-link { display: flex; align-items: center; justify-content: space-between; padding: 1rem 0; border-bottom: 1px solid var(--border); text-decoration: none; color: var(--muted); font-size: 0.72rem; transition: color 0.2s; }
     .c-link:first-child { border-top: 1px solid var(--border); }
     .c-link:hover { color: var(--text); }
     .c-link-l { display: flex; align-items: center; gap: 0.8rem; }
-    .c-arr { opacity: 0.25; transition: opacity 0.2s; font-size: 0.8rem; }
+    .c-arr { opacity: 0.25; transition: opacity 0.2s; }
     .c-link:hover .c-arr { opacity: 1; }
 
     /* ══ FOOTER ══ */
-    footer { position: relative; z-index: 2; border-top: 1px solid var(--border); padding: 2rem 3rem; display: flex; align-items: center; justify-content: space-between; }
-    .f-logo { font-family: 'DM Serif Display', serif; font-size: 1rem; text-decoration: none; color: var(--text); }
-    .f-copy { font-family: 'Space Mono', monospace; font-size: 0.48rem; color: var(--muted); letter-spacing: 0.08em; }
+    footer {
+      position: relative; z-index: 2;
+      border-top: 1px solid var(--border);
+      padding: 0 3rem;
+      overflow: hidden;
+    }
+    .footer-big {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(5rem, 15vw, 16rem);
+      line-height: 0.85; letter-spacing: 0.03em;
+      color: rgba(255,255,255,0.07);
+      user-select: none; pointer-events: none;
+      white-space: nowrap; overflow: hidden;
+    }
+    .footer-bottom {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1.5rem 0; border-top: 1px solid var(--border);
+    }
+    .f-logo { font-family: 'Bebas Neue', sans-serif; font-size: 1.2rem; text-decoration: none; color: var(--text); letter-spacing: 0.08em; }
+    .f-copy { font-family: 'Space Mono', monospace; font-size: 0.46rem; color: var(--muted); letter-spacing: 0.08em; }
 
     /* ══ MODAL ══ */
-    #modal { display: none; position: fixed; inset: 0; z-index: 9000; background: rgba(249,246,241,0.97); backdrop-filter: blur(12px); align-items: center; justify-content: center; padding: 2rem; }
+    #modal { display: none; position: fixed; inset: 0; z-index: 9000; background: rgba(5,0,255,0.97); backdrop-filter: blur(12px); align-items: center; justify-content: center; padding: 2rem; }
     #modal.open { display: flex; }
-    .m-box { position: relative; width: 100%; max-width: 420px; background: var(--bg2); border: 1px solid var(--border); overflow: hidden; }
+    .m-box { position: relative; width: 100%; max-width: 420px; background: rgba(255,255,255,0.08); border: 1px solid var(--border); overflow: hidden; }
     #mvid { width: 100%; max-height: 85vh; display: block; background: #000; }
-    .m-close { position: absolute; top: 0.75rem; right: 0.75rem; z-index: 10; background: var(--bg); border: 1px solid var(--border); color: var(--text); font-family: 'Space Mono', monospace; font-size: 0.52rem; letter-spacing: 0.08em; padding: 0.3rem 0.85rem; cursor: pointer; transition: background 0.2s, color 0.2s; }
-    .m-close:hover { background: var(--text); color: var(--bg); }
+    .m-close { position: absolute; top: 0.75rem; right: 0.75rem; z-index: 10; background: var(--blue); border: 1px solid var(--border); color: var(--text); font-family: 'Space Mono', monospace; font-size: 0.52rem; letter-spacing: 0.08em; padding: 0.3rem 0.85rem; cursor: pointer; transition: background 0.2s; }
+    .m-close:hover { background: rgba(255,255,255,0.15); }
 
     /* ══ ANIMATIONS ══ */
     @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
@@ -351,16 +403,15 @@
       nav { padding: 1.2rem 1.5rem; }
       .nav-links { display: none; }
       #hero { padding: 0 1.5rem 4rem; }
-      .hero-headline { font-size: clamp(3.5rem, 13vw, 6rem); max-width: none; }
+      .hero-headline { font-size: clamp(4.5rem, 17vw, 8rem); }
       .hero-bottom { flex-direction: column; align-items: flex-start; gap: 1.8rem; }
-      .hero-img-side { display: none; }
       .work-grid { grid-template-columns: 1fr; }
       .sec-wrap { padding: 5rem 1.5rem; }
       .about-grid { grid-template-columns: 1fr; gap: 3rem; }
       .ct-outer { padding: 2rem 1.5rem 5rem; }
       .ct-glass { padding: 2.5rem 1.5rem; }
       .ct-layout { grid-template-columns: 1fr; gap: 3rem; }
-      footer { padding: 1.5rem; flex-direction: column; gap: 0.5rem; text-align: center; }
+      footer { padding: 0 1.5rem; }
       .yt-grid { grid-template-columns: 1fr; gap: 3rem; }
       .img-grid { columns: 1; }
       .caps-grid { grid-template-columns: 1fr; }
@@ -384,25 +435,21 @@
 
   <!-- ══ HERO ══ -->
   <section id="hero">
-    <div class="hero-img-side">
-      <img src="" alt="Editorial studio visual" id="hero-img">
-    </div>
-    <div class="hero-content">
-      <div class="hero-eyebrow">AI Creative</div>
-      <h1 class="hero-headline">
-        Stories<br>
-        that stop<br>
-        <em>the scroll.</em>
-      </h1>
-      <div class="hero-bottom">
-        <p class="hero-sub">
-          I work at the intersection of <strong>visual culture, creative AI and digital attention</strong>.
-          Hooks, rhythm, tension, atmosphere &mdash; not through loud effects, but through craft.
-        </p>
-        <div class="hero-btns">
-          <a href="#work" class="btn-primary">View Work</a>
-          <a href="#about" class="btn-outline">About Me</a>
-        </div>
+    <div class="hero-bg-grid"></div>
+    <div class="hero-eyebrow">AI Creative</div>
+    <h1 class="hero-headline">
+      STORIES<br>
+      THAT STOP<br>
+      <span class="dim">THE SCROLL.</span>
+    </h1>
+    <div class="hero-bottom">
+      <p class="hero-sub">
+        Working at the intersection of <strong>visual culture, creative AI and digital attention</strong>.
+        Hooks, rhythm, tension, atmosphere &mdash; not through loud effects, but through craft.
+      </p>
+      <div class="hero-btns">
+        <a href="#work" class="btn-primary">View Work</a>
+        <a href="#about" class="btn-outline">About Me</a>
       </div>
     </div>
     <div class="hero-scroll">
@@ -415,7 +462,7 @@
   <section id="work">
     <div class="sec-wrap">
       <div class="s-label reveal">Selected Work</div>
-      <h2 class="s-title reveal">AI Video <em>Campaigns.</em></h2>
+      <h2 class="s-title reveal">AI VIDEO <span class="dim">CAMPAIGNS.</span></h2>
 
       <div class="work-grid reveal">
 
@@ -426,16 +473,10 @@
             <div class="work-card-play"><svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg></div>
           </div>
           <div class="work-card-info">
-            <div class="work-card-meta">
-              <span class="work-card-count">01 / 07</span>
-              <span class="work-card-tag">YouTube Ad · B2B Finance</span>
-            </div>
-            <div class="work-card-title">YouLend<br><em>B2B Lending Platform</em></div>
+            <div class="work-card-meta"><span class="work-card-count">01 / 07</span><span class="work-card-tag">YouTube Ad · B2B Finance</span></div>
+            <div class="work-card-title">YOULEND<br><span class="dim">B2B LENDING PLATFORM</span></div>
             <p class="work-card-body">Concept-driven YouTube ad for a B2B financial lending platform. A unique creative approach that makes an often dry financial category <strong>impossible to ignore</strong>.</p>
-            <div class="work-card-tools">
-              <span class="work-card-tool">AI Video</span>
-              <span class="work-card-tool">Concept Development</span>
-            </div>
+            <div class="work-card-tools"><span class="work-card-tool">AI Video</span><span class="work-card-tool">Concept Development</span></div>
           </div>
         </div>
 
@@ -446,17 +487,10 @@
             <div class="work-card-play"><svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg></div>
           </div>
           <div class="work-card-info">
-            <div class="work-card-meta">
-              <span class="work-card-count">02 / 07</span>
-              <span class="work-card-tag">Brand Ad</span>
-            </div>
-            <div class="work-card-title">Climatecraft<br><em>The Recliner in the Wild</em></div>
+            <div class="work-card-meta"><span class="work-card-count">02 / 07</span><span class="work-card-tag">Brand Ad</span></div>
+            <div class="work-card-title">CLIMATECRAFT<br><span class="dim">THE RECLINER IN THE WILD</span></div>
             <p class="work-card-body">Visual tension as the hook — placing a luxury recliner in an unexpected environment creates the pause that earns attention.</p>
-            <div class="work-card-tools">
-              <span class="work-card-tool">Kling 3.0</span>
-              <span class="work-card-tool">Prompt Engineering</span>
-              <span class="work-card-tool">CapCut</span>
-            </div>
+            <div class="work-card-tools"><span class="work-card-tool">Kling 3.0</span><span class="work-card-tool">Prompt Engineering</span><span class="work-card-tool">CapCut</span></div>
           </div>
         </div>
 
@@ -467,17 +501,10 @@
             <div class="work-card-play"><svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg></div>
           </div>
           <div class="work-card-info">
-            <div class="work-card-meta">
-              <span class="work-card-count">03 / 07</span>
-              <span class="work-card-tag">Cinematic</span>
-            </div>
-            <div class="work-card-title">Tripple<br><em>Memory</em></div>
+            <div class="work-card-meta"><span class="work-card-count">03 / 07</span><span class="work-card-tag">Cinematic</span></div>
+            <div class="work-card-title">TRIPPLE<br><span class="dim">MEMORY</span></div>
             <p class="work-card-body">A cinematic concept ad for a platform about preserving meaningful moments. Emotional narrative over product features — content that earns a second watch.</p>
-            <div class="work-card-tools">
-              <span class="work-card-tool">Claude</span>
-              <span class="work-card-tool">Nano Banana</span>
-              <span class="work-card-tool">Kling 3.0</span>
-            </div>
+            <div class="work-card-tools"><span class="work-card-tool">Claude</span><span class="work-card-tool">Nano Banana</span><span class="work-card-tool">Kling 3.0</span></div>
           </div>
         </div>
 
@@ -488,17 +515,10 @@
             <div class="work-card-play"><svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg></div>
           </div>
           <div class="work-card-info">
-            <div class="work-card-meta">
-              <span class="work-card-count">04 / 07</span>
-              <span class="work-card-tag">Brand Campaign</span>
-            </div>
-            <div class="work-card-title">Zochii<br><em>Radiance Campaign</em></div>
+            <div class="work-card-meta"><span class="work-card-count">04 / 07</span><span class="work-card-tag">Brand Campaign</span></div>
+            <div class="work-card-title">ZOCHII<br><span class="dim">RADIANCE CAMPAIGN</span></div>
             <p class="work-card-body">Luxury beauty aesthetics for social. Brand-native from the first frame — 100K+ impressions across platforms.</p>
-            <div class="work-card-tools">
-              <span class="work-card-tool">Kling 3.0</span>
-              <span class="work-card-tool">Nano Banana Pro</span>
-              <span class="work-card-tool">CapCut</span>
-            </div>
+            <div class="work-card-tools"><span class="work-card-tool">Kling 3.0</span><span class="work-card-tool">Nano Banana Pro</span><span class="work-card-tool">CapCut</span></div>
           </div>
         </div>
 
@@ -509,17 +529,10 @@
             <div class="work-card-play"><svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg></div>
           </div>
           <div class="work-card-info">
-            <div class="work-card-meta">
-              <span class="work-card-count">05 / 07</span>
-              <span class="work-card-tag">UGC Ad</span>
-            </div>
-            <div class="work-card-title">Devriz<br><em>Authentic Skin Story</em></div>
+            <div class="work-card-meta"><span class="work-card-count">05 / 07</span><span class="work-card-tag">UGC Ad</span></div>
+            <div class="work-card-title">DEVRIZ<br><span class="dim">AUTHENTIC SKIN STORY</span></div>
             <p class="work-card-body">UGC storytelling designed to feel earned, not produced. Built for a postpartum skincare brand that needed to be trusted before it could be sold.</p>
-            <div class="work-card-tools">
-              <span class="work-card-tool">Freepik</span>
-              <span class="work-card-tool">Kling 3.0</span>
-              <span class="work-card-tool">ElevenLabs</span>
-            </div>
+            <div class="work-card-tools"><span class="work-card-tool">Freepik</span><span class="work-card-tool">Kling 3.0</span><span class="work-card-tool">ElevenLabs</span></div>
           </div>
         </div>
 
@@ -530,17 +543,10 @@
             <div class="work-card-play"><svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg></div>
           </div>
           <div class="work-card-info">
-            <div class="work-card-meta">
-              <span class="work-card-count">06 / 07</span>
-              <span class="work-card-tag">Short-Form</span>
-            </div>
-            <div class="work-card-title">Skin Education<br><em>Short-Form Dramaturgy</em></div>
+            <div class="work-card-meta"><span class="work-card-count">06 / 07</span><span class="work-card-tag">Short-Form</span></div>
+            <div class="work-card-title">SKIN EDUCATION<br><span class="dim">SHORT-FORM DRAMATURGY</span></div>
             <p class="work-card-body">Educational content with the rhythm of a story — hook, build, payoff. Designed for the three-second window where most content loses the audience.</p>
-            <div class="work-card-tools">
-              <span class="work-card-tool">Nano Banana</span>
-              <span class="work-card-tool">Veo 3</span>
-              <span class="work-card-tool">Premiere Pro</span>
-            </div>
+            <div class="work-card-tools"><span class="work-card-tool">Nano Banana</span><span class="work-card-tool">Veo 3</span><span class="work-card-tool">Premiere Pro</span></div>
           </div>
         </div>
 
@@ -551,16 +557,10 @@
             <div class="work-card-play"><svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg></div>
           </div>
           <div class="work-card-info">
-            <div class="work-card-meta">
-              <span class="work-card-count">07 / 07</span>
-              <span class="work-card-tag">Meta Ad</span>
-            </div>
-            <div class="work-card-title">Zumm<br><em>AI Travel Platform</em></div>
+            <div class="work-card-meta"><span class="work-card-count">07 / 07</span><span class="work-card-tag">Meta Ad</span></div>
+            <div class="work-card-title">ZUMM<br><span class="dim">AI TRAVEL PLATFORM</span></div>
             <p class="work-card-body">Platform ad for an AI travel planner — clean visual narrative that communicates product value before the caption is read.</p>
-            <div class="work-card-tools">
-              <span class="work-card-tool">Kling Motion Control</span>
-              <span class="work-card-tool">Editing Workflow</span>
-            </div>
+            <div class="work-card-tools"><span class="work-card-tool">Kling Motion Control</span><span class="work-card-tool">Editing Workflow</span></div>
           </div>
         </div>
 
@@ -596,8 +596,8 @@
   <section id="visuals">
     <div class="sec-wrap">
       <div class="s-label reveal">Image Work</div>
-      <h2 class="s-title reveal">Statics &amp; <em>Stills.</em></h2>
-      <p class="reveal" style="color:var(--muted);font-size:.9rem;line-height:1.9;max-width:500px;margin-bottom:3.5rem;font-weight:300;">
+      <h2 class="s-title reveal">STATICS &amp; <span class="dim">STILLS.</span></h2>
+      <p class="reveal" style="color:var(--muted);font-size:.7rem;line-height:2;max-width:500px;margin-bottom:3.5rem;">
         AI-generated visuals, posters, and static content &mdash; created with
         <strong style="color:var(--text);">Midjourney, Freepik, Ideogram and GPT Image</strong>. Click any to view full size.
       </p>
@@ -619,7 +619,7 @@
   <section id="youtube">
     <div class="sec-wrap" style="padding-top:0;">
       <div class="s-label reveal">Channel</div>
-      <h2 class="s-title reveal">Organic <em>Content.</em></h2>
+      <h2 class="s-title reveal">ORGANIC <span class="dim">CONTENT.</span></h2>
       <div class="yt-grid">
         <div class="reveal">
           <div class="yt-channel-card">
@@ -647,11 +647,11 @@
   <section id="capabilities">
     <div class="sec-wrap" style="padding-top:0;">
       <div class="s-label reveal">More</div>
-      <h2 class="s-title reveal">Beyond <em>the Reel.</em></h2>
+      <h2 class="s-title reveal">BEYOND <span class="dim">THE REEL.</span></h2>
       <div class="caps-grid">
         <div class="cap-card reveal">
           <div class="cap-icon-wrap">🧑‍🏫</div>
-          <div class="cap-title">AI Training &amp;<br><em>Workshops</em></div>
+          <div class="cap-title">AI TRAINING &amp; <span class="dim">WORKSHOPS</span></div>
           <div class="cap-stat-row"><span class="cap-stat">10+ Sessions</span><span class="cap-stat">Marketing Agency</span><span class="cap-stat">Multiple Teams</span></div>
           <p class="cap-desc">Trained <strong>graphic designers, video editors and marketing teams</strong> at a creative agency on integrating AI into daily workflows. Full creative toolkit &mdash; video, image, voice, avatars, automation pipelines.</p>
           <div class="slide-tools"><span class="slide-tool">AI Video Gen</span><span class="slide-tool">AI Image Gen</span><span class="slide-tool">Voice &amp; Avatar</span><span class="slide-tool">Workflow Automation</span></div>
@@ -659,7 +659,7 @@
         </div>
         <div class="cap-card reveal">
           <div class="cap-icon-wrap">🌐</div>
-          <div class="cap-title">Web Design &amp;<br><em>Vibe Coding</em></div>
+          <div class="cap-title">WEB DESIGN &amp; <span class="dim">VIBE CODING</span></div>
           <div class="cap-stat-row"><span class="cap-stat">Animated &amp; 3D</span><span class="cap-stat">AI-Assisted Dev</span><span class="cap-stat">Live Deployed</span></div>
           <div class="cap-browser">
             <div class="cap-browser-bar"><div class="cap-browser-dot" style="background:#ff5f57;"></div><div class="cap-browser-dot" style="background:#febc2e;"></div><div class="cap-browser-dot" style="background:#28c840;"></div><div class="cap-browser-url">website-bk-3jns.vercel.app</div></div>
@@ -676,7 +676,7 @@
   <section id="about">
     <div class="sec-wrap">
       <div class="s-label reveal">About</div>
-      <h2 class="s-title reveal">Who I <em>am.</em></h2>
+      <h2 class="s-title reveal">WHO I <span class="dim">AM.</span></h2>
       <div class="about-grid">
         <div class="profile-card reveal">
           <div class="profile-img-wrap"><img src="https://res.cloudinary.com/ddag6l8pj/image/upload/q_auto/f_auto/v1780911532/Man_leaning_on_hand_cafe_202605121019_s_1_erkom7.jpg" alt="Badal Kabi"></div>
@@ -706,7 +706,7 @@
       <div class="ct-glass reveal">
         <div class="ct-layout">
           <div>
-            <div class="ct-headline">Let's<br><em>Connect.</em></div>
+            <div class="ct-headline">LET'S<br><span class="dim">CONNECT.</span></div>
             <p class="ct-sub">Open to interesting conversations &mdash; roles, collaborations, or just talking visual storytelling and AI creative.</p>
             <a href="mailto:badalkabi2001@gmail.com" class="ct-email-link"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>badalkabi2001@gmail.com</a>
           </div>
@@ -719,9 +719,13 @@
     </div>
   </section>
 
+  <!-- ══ FOOTER ══ -->
   <footer>
-    <a href="#hero" class="f-logo">Badal Kabi</a>
-    <div class="f-copy">AI Creative &middot; © 2026</div>
+    <div class="footer-big">BADAL KABI</div>
+    <div class="footer-bottom">
+      <a href="#hero" class="f-logo">BADAL KABI</a>
+      <div class="f-copy">AI Creative &middot; © 2026</div>
+    </div>
   </footer>
 
   <!-- IMAGE LIGHTBOX -->
@@ -735,10 +739,6 @@
   </div>
 
   <script>
-    /* Hero image */
-    const heroImg = document.getElementById('hero-img');
-    if (!heroImg.src || heroImg.src === window.location.href) heroImg.parentElement.style.display = 'none';
-
     /* Auto-play visible videos in grid */
     const workVids = document.querySelectorAll('.work-card-video video');
     const vidObs = new IntersectionObserver(entries => {
@@ -785,7 +785,6 @@
 
     document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeVid(); closeImg(); } });
 
-    /* Anchor scroll */
     document.querySelectorAll('a[href^="#"]').forEach(a => {
       a.addEventListener('click', e => {
         const id = a.getAttribute('href').slice(1);
