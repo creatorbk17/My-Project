@@ -437,7 +437,7 @@
 
   <!-- SCROLL-DRIVEN VIDEO BACKGROUND -->
   <div id="scroll-video-wrap">
-    <video id="scroll-video" src="https://res.cloudinary.com/ddag6l8pj/video/upload/q_auto/f_auto/v1781103866/Man_scrolling_smartphone_with_in__202606101702_oh6xlq.mp4" preload="auto" muted playsinline></video>
+    <video id="scroll-video" data-src="https://res.cloudinary.com/ddag6l8pj/video/upload/q_auto/v1781104292/0610_1_lprdon.mp4" preload="auto" muted playsinline></video>
   </div>
 
   <!-- NAV -->
@@ -758,22 +758,35 @@
   </div>
 
   <script>
-    /* Scroll-driven background video */
+    /* Scroll-driven background video.
+       Fetched as a blob so the whole file is in memory — streamed video
+       isn't reliably seekable, which makes scrubbing stutter or fail. */
     const bgVid = document.getElementById('scroll-video');
     let targetTime = 0;
     function updateTarget() {
       const max = document.documentElement.scrollHeight - window.innerHeight;
       const frac = max > 0 ? window.scrollY / max : 0;
-      if (bgVid.duration) targetTime = frac * bgVid.duration;
+      if (bgVid.duration) targetTime = frac * (bgVid.duration - 0.1);
     }
+    fetch(bgVid.dataset.src)
+      .then(r => r.blob())
+      .then(blob => { bgVid.src = URL.createObjectURL(blob); bgVid.load(); })
+      .catch(() => { bgVid.src = bgVid.dataset.src; });
     window.addEventListener('scroll', updateTarget, { passive: true });
+    window.addEventListener('resize', updateTarget, { passive: true });
     bgVid.addEventListener('loadedmetadata', updateTarget);
-    (function smoothScrub() {
-      if (bgVid.duration && Math.abs(bgVid.currentTime - targetTime) > 0.02) {
-        bgVid.currentTime += (targetTime - bgVid.currentTime) * 0.12;
-      }
-      requestAnimationFrame(smoothScrub);
-    })();
+    function scrubStep() {
+      if (!bgVid.duration || bgVid.seeking) return;
+      const diff = targetTime - bgVid.currentTime;
+      if (Math.abs(diff) < 0.01) return;
+      /* adaptive: gentle when close (smooth), aggressive when far (no lag) */
+      const k = Math.min(0.55, 0.15 + Math.abs(diff) * 0.08);
+      bgVid.currentTime += diff * k;
+    }
+    /* chain off 'seeked' so the next seek fires as soon as the previous
+       completes — rAF alone lags when individual seeks are slow */
+    bgVid.addEventListener('seeked', scrubStep);
+    (function loop() { scrubStep(); requestAnimationFrame(loop); })();
 
     /* Auto-play visible videos in grid */
     const workVids = document.querySelectorAll('.work-card-video video');
