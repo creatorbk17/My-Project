@@ -393,6 +393,20 @@
     .m-close { position: absolute; top: 0.75rem; right: 0.75rem; z-index: 10; background: var(--blue); border: 1px solid var(--border); color: var(--text); font-family: 'Space Mono', monospace; font-size: 0.52rem; letter-spacing: 0.08em; padding: 0.3rem 0.85rem; cursor: pointer; transition: background 0.2s; }
     .m-close:hover { background: rgba(255,255,255,0.15); }
 
+    /* ══ SCROLL VIDEO BG ══ */
+    #scroll-video-wrap {
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      overflow: hidden;
+    }
+    #scroll-video {
+      width: 100%; height: 100%; object-fit: cover; display: block;
+      opacity: 0.22;
+      filter: contrast(1.1);
+      mix-blend-mode: screen;
+    }
+    /* Everything above the video */
+    nav, section, footer, .ticker-wrap { position: relative; z-index: 2; }
+
     /* ══ ANIMATIONS ══ */
     @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
@@ -420,6 +434,11 @@
 </head>
 
 <body>
+
+  <!-- SCROLL-DRIVEN VIDEO BACKGROUND -->
+  <div id="scroll-video-wrap">
+    <video id="scroll-video" src="https://res.cloudinary.com/ddag6l8pj/video/upload/q_auto/f_auto/v1781103866/Man_scrolling_smartphone_with_in__202606101702_oh6xlq.mp4" preload="auto" muted playsinline></video>
+  </div>
 
   <!-- NAV -->
   <nav>
@@ -739,6 +758,23 @@
   </div>
 
   <script>
+    /* Scroll-driven background video */
+    const bgVid = document.getElementById('scroll-video');
+    let targetTime = 0;
+    function updateTarget() {
+      const max = document.documentElement.scrollHeight - window.innerHeight;
+      const frac = max > 0 ? window.scrollY / max : 0;
+      if (bgVid.duration) targetTime = frac * bgVid.duration;
+    }
+    window.addEventListener('scroll', updateTarget, { passive: true });
+    bgVid.addEventListener('loadedmetadata', updateTarget);
+    (function smoothScrub() {
+      if (bgVid.duration && Math.abs(bgVid.currentTime - targetTime) > 0.02) {
+        bgVid.currentTime += (targetTime - bgVid.currentTime) * 0.12;
+      }
+      requestAnimationFrame(smoothScrub);
+    })();
+
     /* Auto-play visible videos in grid */
     const workVids = document.querySelectorAll('.work-card-video video');
     const vidObs = new IntersectionObserver(entries => {
