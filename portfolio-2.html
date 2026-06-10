@@ -21,7 +21,7 @@
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html { scroll-behavior: smooth; }
+    /* scroll-behavior removed — Lenis drives smooth scrolling */
 
     body {
       font-family: 'Space Mono', monospace;
@@ -393,13 +393,13 @@
     .m-close { position: absolute; top: 0.75rem; right: 0.75rem; z-index: 10; background: var(--blue); border: 1px solid var(--border); color: var(--text); font-family: 'Space Mono', monospace; font-size: 0.52rem; letter-spacing: 0.08em; padding: 0.3rem 0.85rem; cursor: pointer; transition: background 0.2s; }
     .m-close:hover { background: rgba(255,255,255,0.15); }
 
-    /* ══ SCROLL VIDEO BG ══ */
+    /* ══ SCROLL VIDEO BG (canvas frame-sequence scrub) ══ */
     #scroll-video-wrap {
       position: fixed; inset: 0; z-index: 0; pointer-events: none;
       overflow: hidden;
     }
-    #scroll-video {
-      width: 100%; height: 100%; object-fit: cover; display: block;
+    #scroll-canvas {
+      width: 100%; height: 100%; display: block;
       opacity: 0.22;
       filter: contrast(1.1);
       mix-blend-mode: screen;
@@ -435,9 +435,9 @@
 
 <body>
 
-  <!-- SCROLL-DRIVEN VIDEO BACKGROUND -->
+  <!-- SCROLL-DRIVEN FRAME-SEQUENCE BACKGROUND -->
   <div id="scroll-video-wrap">
-    <video id="scroll-video" data-src="https://res.cloudinary.com/ddag6l8pj/video/upload/q_auto/v1781104292/0610_1_lprdon.mp4" preload="auto" muted playsinline></video>
+    <canvas id="scroll-canvas"></canvas>
   </div>
 
   <!-- NAV -->
@@ -757,36 +757,89 @@
     <div class="m-box"><button class="m-close" onclick="closeVid()">&#x2715; Close</button><video id="mvid" controls playsinline></video></div>
   </div>
 
+  <script src="https://unpkg.com/lenis@1.1.18/dist/lenis.min.js"></script>
   <script>
-    /* Scroll-driven background video.
-       Fetched as a blob so the whole file is in memory — streamed video
-       isn't reliably seekable, which makes scrubbing stutter or fail. */
-    const bgVid = document.getElementById('scroll-video');
-    let targetTime = 0;
-    function updateTarget() {
+    /* ══ Lenis smooth scroll ══ */
+    const lenis = new Lenis({ lerp: 0.09, wheelMultiplier: 1 });
+
+    /* ══ Scroll-scrubbed frame sequence ══
+       Video seeking is decode-bound and stutters; instead, frames are
+       pre-extracted from the Cloudinary video (so_<sec> returns a JPEG
+       of that moment) and painted to a canvas — sub-millisecond per frame. */
+    const VIDEO_ID = 'v1781104292/0610_1_lprdon';
+    const DURATION = 15.9;
+    const FRAME_COUNT = 96;
+    const frames = new Array(FRAME_COUNT);
+    let framesLoaded = 0;
+
+    const canvas = document.getElementById('scroll-canvas');
+    const ctx = canvas.getContext('2d');
+
+    function frameURL(i) {
+      const t = (i / (FRAME_COUNT - 1)) * DURATION;
+      return `https://res.cloudinary.com/ddag6l8pj/video/upload/so_${t.toFixed(2)},w_1280,q_auto:good/${VIDEO_ID}.jpg`;
+    }
+    for (let i = 0; i < FRAME_COUNT; i++) {
+      const img = new Image();
+      img.onload = () => { framesLoaded++; if (i === 0) drawFrame(0); };
+      img.src = frameURL(i);
+      frames[i] = img;
+    }
+
+    function sizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    sizeCanvas();
+    window.addEventListener('resize', () => { sizeCanvas(); drawFrame(Math.round(currentFrame)); });
+
+    function drawFrame(i) {
+      const img = frames[Math.max(0, Math.min(FRAME_COUNT - 1, i))];
+      if (!img || !img.complete || !img.naturalWidth) return;
+      /* cover-fit */
+      const cw = canvas.width, ch = canvas.height;
+      const scale = Math.max(cw / img.naturalWidth, ch / img.naturalHeight);
+      const w = img.naturalWidth * scale, h = img.naturalHeight * scale;
+      ctx.clearRect(0, 0, cw, ch);
+      ctx.drawImage(img, (cw - w) / 2, (ch - h) / 2, w, h);
+    }
+
+    /* ══ Story beats: pin video moments to page sections ══
+       scrollY anchors → video time. Piecewise-linear interpolation, so
+       each act of the video lands exactly on its section. */
+    function beatPoints() {
+      const top = id => { const el = document.getElementById(id); return el ? el.offsetTop - 80 : 0; };
       const max = document.documentElement.scrollHeight - window.innerHeight;
-      const frac = max > 0 ? window.scrollY / max : 0;
-      if (bgVid.duration) targetTime = frac * (bgVid.duration - 0.1);
+      return [
+        [0, 0],                         /* hero — scrolling the phone */
+        [top('work'), 3.5],             /* notices the work */
+        [top('visuals'), 8.0],          /* amazed reaction */
+        [top('about'), 11.0],
+        [Math.min(top('contact'), max), 14.0], /* phone to ear */
+        [max, DURATION]
+      ];
     }
-    fetch(bgVid.dataset.src)
-      .then(r => r.blob())
-      .then(blob => { bgVid.src = URL.createObjectURL(blob); bgVid.load(); })
-      .catch(() => { bgVid.src = bgVid.dataset.src; });
-    window.addEventListener('scroll', updateTarget, { passive: true });
-    window.addEventListener('resize', updateTarget, { passive: true });
-    bgVid.addEventListener('loadedmetadata', updateTarget);
-    function scrubStep() {
-      if (!bgVid.duration || bgVid.seeking) return;
-      const diff = targetTime - bgVid.currentTime;
-      if (Math.abs(diff) < 0.01) return;
-      /* adaptive: gentle when close (smooth), aggressive when far (no lag) */
-      const k = Math.min(0.55, 0.15 + Math.abs(diff) * 0.08);
-      bgVid.currentTime += diff * k;
+    function timeForScroll(y) {
+      const pts = beatPoints();
+      for (let i = 1; i < pts.length; i++) {
+        if (y <= pts[i][0]) {
+          const [y0, t0] = pts[i - 1], [y1, t1] = pts[i];
+          return y1 === y0 ? t1 : t0 + (t1 - t0) * ((y - y0) / (y1 - y0));
+        }
+      }
+      return DURATION;
     }
-    /* chain off 'seeked' so the next seek fires as soon as the previous
-       completes — rAF alone lags when individual seeks are slow */
-    bgVid.addEventListener('seeked', scrubStep);
-    (function loop() { scrubStep(); requestAnimationFrame(loop); })();
+
+    let currentFrame = 0, lastDrawn = -1;
+    (function renderLoop(time) {
+      lenis.raf(time);
+      const t = timeForScroll(window.scrollY);
+      const target = (t / DURATION) * (FRAME_COUNT - 1);
+      currentFrame += (target - currentFrame) * 0.14; /* eased scrub */
+      const idx = Math.round(currentFrame);
+      if (idx !== lastDrawn) { drawFrame(idx); lastDrawn = idx; }
+      requestAnimationFrame(renderLoop);
+    })();
 
     /* Auto-play visible videos in grid */
     const workVids = document.querySelectorAll('.work-card-video video');
@@ -839,7 +892,7 @@
         const id = a.getAttribute('href').slice(1);
         if (!id) return;
         const target = document.getElementById(id);
-        if (target) { e.preventDefault(); window.scrollTo({ top: target.getBoundingClientRect().top + window.pageYOffset - 80, behavior: 'smooth' }); }
+        if (target) { e.preventDefault(); lenis.scrollTo(target, { offset: -80, duration: 1.4 }); }
       });
     });
   </script>
