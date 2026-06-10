@@ -93,8 +93,15 @@
       font-size: clamp(6rem, 14vw, 14rem);
       line-height: 0.88; letter-spacing: 0.02em;
       color: var(--text); position: relative; z-index: 2;
-      opacity: 0; animation: fadeUp 0.8s 0.55s forwards;
     }
+    .hero-headline .hl-line { display: block; overflow: hidden; }
+    .hero-headline .ch {
+      display: inline-block;
+      transform: translateY(115%);
+      transition: transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+      will-change: transform;
+    }
+    body.loaded .hero-headline .ch { transform: translateY(0); }
     .hero-headline .dim { color: var(--muted); }
     .hero-bottom {
       display: flex; align-items: flex-end; gap: 5rem;
@@ -407,6 +414,72 @@
     /* Everything above the video */
     nav, section, footer, .ticker-wrap { position: relative; z-index: 2; }
 
+    /* ══ INTRO OVERLAY ══ */
+    #intro-overlay {
+      position: fixed; inset: 0; z-index: 9500;
+      background: #0300CC;
+      display: flex; align-items: center; justify-content: center;
+      transition: transform 1s cubic-bezier(0.76, 0, 0.24, 1);
+    }
+    #intro-overlay .intro-logo {
+      font-family: 'Bebas Neue', sans-serif; font-size: 2rem;
+      color: var(--text); letter-spacing: 0.14em;
+      opacity: 0; animation: fadeIn 0.5s 0.15s forwards;
+    }
+    body.loaded #intro-overlay { transform: translateY(-100%); }
+
+    /* ══ CUSTOM CURSOR ══ */
+    @media (hover: hover) and (pointer: fine) {
+      body { cursor: none; }
+      a, button, .work-card, .img-tile { cursor: none; }
+    }
+    #cursor-dot, #cursor-ring {
+      position: fixed; top: 0; left: 0; pointer-events: none; z-index: 9600;
+      border-radius: 50%;
+      display: none;
+    }
+    @media (hover: hover) and (pointer: fine) {
+      #cursor-dot, #cursor-ring { display: block; }
+    }
+    #cursor-dot { width: 5px; height: 5px; background: #fff; }
+    #cursor-ring {
+      width: 34px; height: 34px;
+      border: 1px solid rgba(255, 255, 255, 0.6);
+      display: none;
+      align-items: center; justify-content: center;
+      transition: width 0.25s ease, height 0.25s ease, background-color 0.25s ease, border-color 0.25s ease;
+    }
+    @media (hover: hover) and (pointer: fine) { #cursor-ring { display: flex; } }
+    #cursor-ring .cursor-label {
+      font-family: 'Space Mono', monospace; font-size: 0.42rem;
+      letter-spacing: 0.14em; color: var(--blue); font-weight: 700;
+      opacity: 0; transition: opacity 0.2s;
+      user-select: none;
+    }
+    #cursor-ring.cursor-action {
+      width: 64px; height: 64px;
+      background: #fff; border-color: #fff;
+    }
+    #cursor-ring.cursor-action .cursor-label { opacity: 1; }
+    #cursor-ring.cursor-link { width: 48px; height: 48px; border-color: #fff; }
+
+    /* ══ CARD TILT ══ */
+    .work-grid { perspective: 1200px; }
+    .work-card { transform-style: preserve-3d; will-change: transform; }
+    .work-card .work-card-video video { will-change: transform; }
+
+    /* ══ FOOTER INK FILL ══ */
+    .footer-big {
+      background-image: linear-gradient(to top, #fff 0%, rgba(255,255,255,0.07) 0%);
+      -webkit-background-clip: text; background-clip: text;
+      color: transparent !important;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .hero-headline .ch { transition: none; transform: none; }
+      #intro-overlay { display: none; }
+    }
+
     /* ══ ANIMATIONS ══ */
     @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
@@ -435,6 +508,13 @@
 
 <body>
 
+  <!-- INTRO OVERLAY -->
+  <div id="intro-overlay"><div class="intro-logo">BADAL KABI</div></div>
+
+  <!-- CUSTOM CURSOR -->
+  <div id="cursor-dot"></div>
+  <div id="cursor-ring"><span class="cursor-label"></span></div>
+
   <!-- SCROLL-DRIVEN FRAME-SEQUENCE BACKGROUND -->
   <div id="scroll-video-wrap">
     <canvas id="scroll-canvas"></canvas>
@@ -456,11 +536,7 @@
   <section id="hero">
     <div class="hero-bg-grid"></div>
     <div class="hero-eyebrow">AI Creative</div>
-    <h1 class="hero-headline">
-      STORIES<br>
-      THAT STOP<br>
-      <span class="dim">THE SCROLL.</span>
-    </h1>
+    <h1 class="hero-headline" id="hero-headline"><span class="hl-line">STORIES</span><span class="hl-line">THAT STOP</span><span class="hl-line dim">THE SCROLL.</span></h1>
     <div class="hero-bottom">
       <p class="hero-sub">
         Working at the intersection of <strong>visual culture, creative AI and digital attention</strong>.
@@ -766,7 +842,7 @@
        Video seeking is decode-bound and stutters; instead, frames are
        pre-extracted from the Cloudinary video (so_<sec> returns a JPEG
        of that moment) and painted to a canvas — sub-millisecond per frame. */
-    const VIDEO_ID = 'v1781104292/0610_1_lprdon';
+    const VIDEO_ID = 'v1781108323/0610_2_qgu9dy';
     const DURATION = 15.9;
     const FRAME_COUNT = 96;
     const frames = new Array(FRAME_COUNT);
@@ -830,14 +906,100 @@
       return DURATION;
     }
 
-    let currentFrame = 0, lastDrawn = -1;
+    /* ══ Headline: split into letters with staggered reveal ══ */
+    const hlLines = document.querySelectorAll('#hero-headline .hl-line');
+    let chIndex = 0;
+    hlLines.forEach(line => {
+      const text = line.textContent;
+      line.textContent = '';
+      [...text].forEach(c => {
+        const s = document.createElement('span');
+        s.className = 'ch';
+        s.innerHTML = c === ' ' ? '&nbsp;' : c;
+        s.style.transitionDelay = (0.65 + chIndex * 0.035) + 's';
+        line.appendChild(s);
+        chIndex++;
+      });
+    });
+
+    /* ══ Load choreography ══ */
+    window.addEventListener('load', () => {
+      setTimeout(() => document.body.classList.add('loaded'), 350);
+    });
+    /* fallback if load event already fired or hangs */
+    setTimeout(() => document.body.classList.add('loaded'), 2200);
+
+    /* ══ Custom cursor ══ */
+    const curDot = document.getElementById('cursor-dot');
+    const curRing = document.getElementById('cursor-ring');
+    const curLabel = curRing.querySelector('.cursor-label');
+    let mx = -100, my = -100, rx = -100, ry = -100;
+    document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; }, { passive: true });
+    document.addEventListener('mouseover', e => {
+      const card = e.target.closest('.work-card');
+      const tile = e.target.closest('.img-tile');
+      const link = e.target.closest('a, button');
+      if (card) { curRing.className = 'cursor-action'; curLabel.textContent = 'PLAY'; }
+      else if (tile) { curRing.className = 'cursor-action'; curLabel.textContent = 'OPEN'; }
+      else if (link) { curRing.className = 'cursor-link'; curLabel.textContent = ''; }
+      else { curRing.className = ''; curLabel.textContent = ''; }
+    }, { passive: true });
+
+    /* ══ Card tilt ══ */
+    document.querySelectorAll('.work-card').forEach(card => {
+      const vid = card.querySelector('.work-card-video video');
+      card.addEventListener('mousemove', e => {
+        const r = card.getBoundingClientRect();
+        const px = (e.clientX - r.left) / r.width - 0.5;
+        const py = (e.clientY - r.top) / r.height - 0.5;
+        card.style.transition = 'transform 0.08s linear';
+        card.style.transform = `translateY(-5px) rotateX(${(-py * 5).toFixed(2)}deg) rotateY(${(px * 5).toFixed(2)}deg)`;
+        if (vid) vid.style.transform = `translate(${(-px * 8).toFixed(1)}px, ${(-py * 8).toFixed(1)}px) scale(1.06)`;
+      });
+      card.addEventListener('mouseleave', () => {
+        card.style.transition = 'transform 0.5s cubic-bezier(0.16, 1, 0.3, 1)';
+        card.style.transform = '';
+        if (vid) vid.style.transform = '';
+      });
+    });
+
+    /* ══ Render loop: frame scrub + hero parallax-out + footer ink + cursor ══ */
+    const heroEl = document.getElementById('hero');
+    const footerBig = document.querySelector('.footer-big');
+    let currentFrame = 0, lastDrawn = -1, lastFill = -1;
     (function renderLoop(time) {
       lenis.raf(time);
-      const t = timeForScroll(window.scrollY);
+      const y = window.scrollY;
+
+      /* frame scrub */
+      const t = timeForScroll(y);
       const target = (t / DURATION) * (FRAME_COUNT - 1);
-      currentFrame += (target - currentFrame) * 0.14; /* eased scrub */
+      currentFrame += (target - currentFrame) * 0.14;
       const idx = Math.round(currentFrame);
       if (idx !== lastDrawn) { drawFrame(idx); lastDrawn = idx; }
+
+      /* hero lines drift apart at different speeds and fade */
+      if (y < window.innerHeight * 1.2) {
+        hlLines.forEach((line, i) => {
+          line.style.transform = `translateY(${(y * (0.12 + i * 0.09)).toFixed(1)}px)`;
+        });
+        heroEl.style.opacity = Math.max(0, 1 - y / (window.innerHeight * 0.85));
+      }
+
+      /* footer ghost text fills with white near the bottom */
+      const max = document.documentElement.scrollHeight - window.innerHeight;
+      const fill = Math.round(Math.max(0, Math.min(1, (y - (max - window.innerHeight * 1.3)) / (window.innerHeight * 1.1))) * 100);
+      if (fill !== lastFill && footerBig) {
+        footerBig.style.backgroundImage =
+          `linear-gradient(to top, rgba(255,255,255,0.85) ${fill}%, rgba(255,255,255,0.07) ${fill}%)`;
+        lastFill = fill;
+      }
+
+      /* cursor: dot snaps, ring trails */
+      curDot.style.transform = `translate(${mx - 2.5}px, ${my - 2.5}px)`;
+      rx += (mx - rx) * 0.16; ry += (my - ry) * 0.16;
+      curRing.style.transform = `translate(${rx - curRing.offsetWidth / 2}px, ${ry - curRing.offsetHeight / 2}px)`;
+
       requestAnimationFrame(renderLoop);
     })();
 
